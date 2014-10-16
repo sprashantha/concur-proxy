@@ -10,87 +10,19 @@
   <link rel="stylesheet"
         href="typeahead.js-bootstrap.css/typeahead.js-bootstrap.css">
   <link rel="stylesheet" href="app.css">
-
 </head>
-<body class="container">
-  
-  <h1>Concur</h1>
-  
-  <p class="lead">Welcome to Concur!</p>
-  
-  <div ng-app="" ng-controller="homeController">
-      <h2>Upcoming Trips ({{home.trips.length}})</h2>
-      <table>
-          <thead>
-          <tr>
-              <th>Trip Name</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Record Locator</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr ng-repeat="t in home.trips">
-              <td>{{ t.TripName }}</td>
-              <td>{{ t.StartDateLocal }}</td>
-              <td>{{ t.EndDateLocal }}</td>
-              <td>{{ t.RecordLocator }}</td>
-          </tr>
-          </tbody>
-      </table>
+<body class="container" ng-app="concurApp">
 
-      <h2>Unsubmitted Reports ({{home.reports.Items.length}})</h2>
-      <table>
-          <thead>
-          <tr>
-              <th>Report Name</th>
-              <th>Status</th>
-              <th>Payment Status</th>
-              <th>Report Date</th>
-              <th>Requested Amount</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr ng-repeat="r in home.reports.Items">
-              <td>{{ r.Name }}</td>
-              <td>{{ r.ApprovalStatusName }}</td>
-              <td>{{ r.PaymentStatusName }}</td>
-              <td>{{ r.CreateDate }}</td>
-              <td>{{ r.Total | currency }}</td>
-          </tr>
-          </tbody>
-      </table>
-
-      <h2>Pending Approvals ({{home.approvals.Items.length}})</h2>
-      <table>
-          <thead>
-          <tr>
-              <th>Report Name</th>
-              <th>Employee</th>
-              <th>Report Date</th>
-              <th>Requested Amount</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr ng-repeat="a in home.approvals.Items">
-              <td>{{ a.Name }}</td>
-              <td>{{ a.OwnerName }}</td>
-              <td>{{ a.SubmitDate }}</td>
-              <td>{{ a.Total | currency }}</td>
-          </tr>
-          </tbody>
-      </table>
-  </div>
-
+<!-- The rest of the app -->
   <script src="jquery/jquery.min.js"></script>
   <script src="bootstrap/dist/js/bootstrap.min.js"></script>
-  <script src = "http://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular.min.js"></script>
+  <script src = "angular/angular.min.js"></script>
+  <script src = "angular-route/angular-route.min.js"></script>
 
-  <script>
-      function homeController($scope,$http) {
-          $http.get("/concur/api/home")
-                  .success(function(response) {$scope.home = response;});
-      }
-  </script>
+  <p class="lead">Welcome to Concur!</p>
+
+  <div ng-view></div>
+
+  <script src="app.js"></script>
 </body>
 </html>
