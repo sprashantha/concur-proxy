@@ -13,16 +13,19 @@
 </head>
 <body class="container" ng-app="concurApp">
 
-<!-- The rest of the app -->
+  <!-- Welcome text -->
+  <h1 class="lead">Welcome to Concur!</h1>
+
+  <!--The main view. All the html will be rendered here (see app.js) -->
+  <div ng-view></div>
+
+  <!-- Core Javascript Libraries -->
   <script src="jquery/jquery.min.js"></script>
   <script src="bootstrap/dist/js/bootstrap.min.js"></script>
   <script src = "angular/angular.min.js"></script>
   <script src = "angular-route/angular-route.min.js"></script>
 
-  <p class="lead">Welcome to Concur!</p>
-
-  <div ng-view></div>
-
+  <!-- Routes and controllers -->
   <script src="app.js"></script>
 </body>
 </html>

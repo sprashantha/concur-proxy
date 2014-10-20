@@ -6,6 +6,10 @@
     </div>
 
       <h2 ng-show="home.trips.length">Upcoming Trips ({{home.trips.length}})</h2>
+      <div ng-show="home.trips.error">
+          <h2>Upcoming Trips </h2>
+          <p>({{home.trips.error}})</p>
+      </div>
       <table ng-show="home.trips.length">
           <thead>
           <tr>
