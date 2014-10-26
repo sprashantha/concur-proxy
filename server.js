@@ -19,17 +19,21 @@ const
 const
 	config = {
 		concur_api_url: 'http://www.concursolutions.com/api/',
-		access_token: 'OAuth EKL1hRqbSVw3Nd/njDgxl624qPM=',
+		access_token: '4ujlb9b+NRAhMmLl5ZCAGuRpCSY=',
 		concur_reports_url: 'v3.0/expense/reportdigests',
 		concur_approvals_url: 'v3.0/expense/reportdigests?user=ALL&approvalStatusCode=A_PEND&approverLoginID=sprashanthadev%40gmail.com',
 		concur_trips_url: 'travel/trip/v1.1/',
-        use_mongoose: 'true'
+        use_mongoose: 'false',
+        mongodb_url: 'mongodb://localhost:27017/Concur',
+        redis_server: 'localhost',
+        redis_port: '6379'
 	};
 
     // Routes
 	require('./lib/concur_proxy.js')(config, app);
     require('./lib/concur_home.js')(config, app);
     require('./lib/concur_user.js')(config, app);
+    require('./lib/concur_login.js')(config, app);
 
     // Start the server and listen on port 3000.
 	app.listen(3000, function(){
