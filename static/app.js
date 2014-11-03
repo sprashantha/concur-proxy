@@ -11,6 +11,10 @@ app.config(function($routeProvider, $httpProvider){
             templateUrl:'login.html',
             controller: 'loginController'
         })
+        .when('/logout', {
+            templateUrl:'login.html',
+            controller: 'loginController'
+        })
         .when('/home', {
             templateUrl: 'home.html',
             controller: 'homeController'
@@ -22,6 +26,10 @@ app.config(function($routeProvider, $httpProvider){
 app.controller("homeController", function($scope,$rootScope,$http){
     $http({method: 'GET', url: '/concur/api/home', headers: {'authorization': $rootScope.token}})
         .success(function(response){$scope.home = response;});
+});
+
+app.controller("logoutController", function($scope,$rootScope,$http){
+    $rootScope.remove("token");
 });
 
 app.controller('loginController', function ($scope, $rootScope, $http, $location) {

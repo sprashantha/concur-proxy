@@ -1,15 +1,3 @@
-/**
- * app.css - styles for the b4 web app.
- */
-
-.container abbr {
-  cursor: inherit;
-  border-bottom: none;
-}
-.container abbr span {
-  display: none;
-}
-
 
 table, th , td {
     border: 1px solid grey;

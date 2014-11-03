@@ -26,7 +26,8 @@ const
         use_mongoose: 'false',
         mongodb_url: 'mongodb://localhost:27017/Concur',
         redis_server: 'localhost',
-        redis_port: '6379'
+        redis_port: '6379',
+        logging_level: 'info'
 	};
 
     // Routes
