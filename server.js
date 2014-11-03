@@ -30,14 +30,39 @@ const
         logging_level: 'info'
 	};
 
-    // Routes
-	require('./lib/concur_proxy.js')(config, app);
-    require('./lib/concur_home.js')(config, app);
-    require('./lib/concur_user.js')(config, app);
-    require('./lib/concur_login.js')(config, app);
+// Build application context
 
-    // Start the server and listen on port 3000.
-	app.listen(3000, function(){
-		console.log("Server started. Listening on port 3000");
-	})
+let context = {'config': config};
+
+const redis = require('redis'),
+      mongoClient = require('mongodb').MongoClient;
+
+    context.redisClient = redis.createClient(config.redis_port, config.redis_server);
+    context.redisClient.on('error', function (err) {
+            logger.error('Error ' + err);
+        });
+    console.log("Connected to Redis");
+
+    mongoClient.connect(config.mongodb_url, function(connErr, db) {
+        if (connErr) {
+            console.error("connErr:" + connErr);
+            return;
+        }
+        console.log("Connected to Mongodb");
+        context.db = db;
+
+        // Start the server and listen on port 3000.
+        app.listen(3000, function(){
+            console.log("Server started. Listening on port 3000");
+        })
+    });
+
+
+    // Routes
+	require('./lib/concur_proxy.js')(context, app);
+    require('./lib/concur_home.js')(context, app);
+    require('./lib/concur_user.js')(context, app);
+    require('./lib/concur_login.js')(context, app);
+
+
 	
