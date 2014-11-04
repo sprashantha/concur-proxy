@@ -1,5 +1,6 @@
 'use strict'
-const 
+const
+    nconf = require('nconf'),
 	express = require('express'),
     bodyParser = require('body-parser'),
 	app = express();
@@ -16,7 +17,8 @@ const
 
 
 // TODO: Move this config to a separate config.json file.
-const
+
+let
 	config = {
 		concur_api_url: 'http://www.concursolutions.com/api/',
 		access_token: '4ujlb9b+NRAhMmLl5ZCAGuRpCSY=',
@@ -24,11 +26,20 @@ const
 		concur_approvals_url: 'v3.0/expense/reportdigests?user=ALL&approvalStatusCode=A_PEND&approverLoginID=sprashanthadev%40gmail.com',
 		concur_trips_url: 'travel/trip/v1.1/',
         use_mongoose: 'false',
-        mongodb_url: 'mongodb://localhost:27017/Concur',
-        redis_server: 'localhost',
-        redis_port: '6379',
-        logging_level: 'info'
+        mongodb_url: '',
+        redis_server: '',
+        redis_port: '',
+        logging_level: ''
 	};
+
+    // Read Configuration Parameters
+    nconf.argv().env();
+    nconf.file({ file: 'config.json' });
+    config.mongodb_url = nconf.get('mongodb_url');
+    config.redis_server = nconf.get('redis_server');
+    config.redis_port = nconf.get('redis_port');
+    config.logging_level = nconf.get('logging_level');
+
 
 // Build application context
 
@@ -52,8 +63,8 @@ const redis = require('redis'),
         context.db = db;
 
         // Start the server and listen on port 3000.
-        app.listen(3000, function(){
-            console.log("Server started. Listening on port 3000");
+        app.listen(nconf.get('http:port'), function(){
+            console.log("Server started. Listening on port " + nconf.get('http:port'));
         })
     });
 

@@ -1,5 +1,5 @@
 0 info it worked if it ends with ok
-1 verbose cli [ 'node', '/usr/local/bin/npm', 'start' ]
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'run', 'start' ]
 2 info using npm@1.3.24
 3 info using node@v0.10.25
 4 verbose run-script [ 'prestart', 'start', 'poststart' ]
@@ -18,7 +18,7 @@
 10 error     npm owner ls ConcurAPIProxy
 10 error There is likely additional logging output above.
 11 error System Darwin 13.3.0
-12 error command "node" "/usr/local/bin/npm" "start"
+12 error command "node" "/usr/local/bin/npm" "run" "start"
 13 error cwd /Users/prashantha/Documents/dev/concur-proxy
 14 error node -v v0.10.25
 15 error npm -v 1.3.24
