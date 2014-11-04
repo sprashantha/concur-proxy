@@ -63,8 +63,8 @@ const redis = require('redis'),
         context.db = db;
 
         // Start the server and listen on port 3000.
-        app.listen(nconf.get('http:port'), function(){
-            console.log("Server started. Listening on port " + nconf.get('http:port'));
+        app.listen((process.env.PORT || nconf.get('http:port')), function(){
+            console.log("Server started. Listening on port " + (process.env.PORT || nconf.get('http:port')));
         })
     });
 
