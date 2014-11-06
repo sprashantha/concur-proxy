@@ -2,6 +2,7 @@
 const
     nconf = require('nconf'),
 	express = require('express'),
+    async = require('async'),
     bodyParser = require('body-parser'),
 	app = express();
 
@@ -48,28 +49,48 @@ let context = {'config': config};
 const redis = require('redis'),
       mongoClient = require('mongodb').MongoClient;
 
-    context.redisClient = redis.createClient(config.redis_port, config.redis_server);
-    context.redisClient.on('error', function (err) {
-            console.error('Error connecting to redis ' + err);
+    async.parallel([
+        function (callback) {
+            setTimeout(function () {
+                context.redisClient = redis.createClient(config.redis_port, config.redis_server);
+                context.redisClient.on('error', function (err) {
+                    console.error('Error connecting to Redis ' + err);
+                });
+                context.redisClient.on('ready', function () {
+                    console.log("Connected to Redis");
+                })
+                callback();
+            }, 500);
+        },
+        function (callback) {
+             setTimeout(function () {
+                mongoClient.connect(config.mongodb_url, function(connErr, db) {
+                    if (connErr) {
+                        console.error("Error connecting to Mongodb " + connErr);
+                    }
+                    else
+                    {
+                        console.log("Connected to Mongodb");
+                        context.db = db;
+                    }
+                    callback();
+                })
+             }, 500);
+        }],
+        function (err, results) {
+            if (err) {
+                console.error(err);
+            }
+
+            console.log("Attempting to start server on port " + (process.env.PORT || nconf.get('http:port')));
+
+            // Start the server and listen on port set by the environment (example: 8081 in AWS) or 3000.
+            app.listen((process.env.PORT || nconf.get('http:port')), function(){
+                console.log("Server started. Listening on port " + (process.env.PORT || nconf.get('http:port')));
+
+            })
         });
-    context.redisClient.on('ready', function(){
-        console.log("Connected to Redis");
-    })
 
-
-    mongoClient.connect(config.mongodb_url, function(connErr, db) {
-        if (connErr) {
-            console.error("Error connecting to mongodb " + connErr);
-            return;
-        }
-        console.log("Connected to Mongodb");
-        context.db = db;
-    });
-
-    // Start the server and listen on port port set by the environment (example: 8081 in AWS) or 3000.
-    app.listen((process.env.PORT || nconf.get('http:port')), function(){
-        console.log("Server started. Listening on port " + (process.env.PORT || nconf.get('http:port')));
-    })
 
 
     // Routes
