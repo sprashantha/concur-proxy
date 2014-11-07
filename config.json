@@ -2,8 +2,10 @@
     "concur_api_url": "http://www.concursolutions.com/api/",
     "use_mongoose": "false",
     "mongodb_url": "mongodb://localhost:27017/Concur",
-    "redis_server": "localhost",
-    "redis_port": "6379",
+//    "redis_server": "localhost",
+//    "redis_port": "6379",
+    "redis_server": "pub-redis-13304.us-west-2-1.1.ec2.garantiadata.com",
+    "redis_port": "13304",
     "logging_level": "info",
     "http": {
         "port": "3000"
