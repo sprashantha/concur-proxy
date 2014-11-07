@@ -22,7 +22,6 @@ const
 let
 	config = {
 		concur_api_url: 'http://www.concursolutions.com/api/',
-		access_token: '4ujlb9b+NRAhMmLl5ZCAGuRpCSY=',
 		concur_reports_url: 'v3.0/expense/reportdigests',
 		concur_approvals_url: 'v3.0/expense/reportdigests?user=ALL&approvalStatusCode=A_PEND&approverLoginID=sprashanthadev%40gmail.com',
 		concur_trips_url: 'travel/trip/v1.1/',
@@ -52,12 +51,13 @@ const redis = require('redis'),
     async.parallel([
         function (callback) {
             setTimeout(function () {
-                context.redisClient = redis.createClient(config.redis_port, config.redis_server);
-                context.redisClient.on('error', function (err) {
+                let redisClient = redis.createClient(config.redis_port, config.redis_server);
+                redisClient.on('error', function (err) {
                     console.error('Error connecting to Redis ' + err);
                 });
-                context.redisClient.on('ready', function () {
+                redisClient.on('ready', function () {
                     console.log("Connected to Redis");
+                    context.redisClient = redisClient;
                 })
                 callback();
             }, 500);
