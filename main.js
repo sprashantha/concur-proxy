@@ -51,7 +51,7 @@ const redis = require('redis'),
     async.parallel([
         function (callback) {
             setTimeout(function () {
-                let redisClient = redis.createClient(config.redis_port, config.redis_server);
+                let redisClient = redis.createClient(config.redis_port, config.redis_server, {"auth_pass":"password"});
                 redisClient.on('error', function (err) {
                     console.error('Error connecting to Redis ' + err);
                 });
