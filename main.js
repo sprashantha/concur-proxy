@@ -39,8 +39,9 @@ let
     nconf.file({ file: 'config.json' });
 
     // Set the logging level in case it needs to be overridden.
-    if (logging_level && logging_level != ''){
-        logger.transports.console.level = nconf.get('logging_level');
+    config.logging_level = nconf.get('logging_level')
+    if (config.logging_level && config.logging_level != ''){
+        logger.transports.console.level = config.logging_level;
     }
 
     console.log("config.redis_server " + config.redis_server);
