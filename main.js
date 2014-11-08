@@ -40,9 +40,23 @@ let
     config.redis_port = nconf.get('redis_port');
     config.logging_level = nconf.get('logging_level');
 
-console.log("config.redis_server " + config.redis_server);
-console.log("config.redis_port " + config.redis_port);
-console.log("auth_pass " + nconf.get('auth_pass'));
+    console.log("config.redis_server " + config.redis_server);
+    console.log("config.redis_port " + config.redis_port);
+    console.log("auth_pass " + nconf.get('redis_password'));
+    console.log("mongodb_server " + nconf.get('mongodb_server'));
+    console.log("mongodb_port " + nconf.get('mongodb_port'));
+    console.log("mongodb_database " + nconf.get('mongodb_database'));
+    console.log("mongodb_user " + nconf.get('mongodb_user'));
+    console.log("mongodb_password " + nconf.get('mongodb_password'));
+
+    if (nconf.get('mongodb_user') != "" && nconf.get('mongodb_password') != ""){
+        config.mongodb_url = "mongodb://" + nconf.get('mongodb_user') + ":" + nconf.get('mongodb_password') + "@"
+         + nconf.get('mongodb_server') + ":" + nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
+    }else{
+        config.mongodb_url = "mongodb://" + nconf.get('mongodb_server') + ":" +
+            nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
+    }
+    console.log("mongodb_url " + config.mongodb_url);
 
 
 // Build application context
@@ -55,7 +69,7 @@ const redis = require('redis'),
     async.parallel([
         function (callback) {
             setTimeout(function () {
-                let redisClient = redis.createClient(config.redis_port, config.redis_server, {"auth_pass":nconf.get('auth_pass')});
+                let redisClient = redis.createClient(config.redis_port, config.redis_server, {"auth_pass":nconf.get('redis_password')});
                 redisClient.on('error', function (err) {
                     console.error('Error connecting to Redis ' + err);
                 });
@@ -68,6 +82,7 @@ const redis = require('redis'),
         },
         function (callback) {
              setTimeout(function () {
+
                 mongoClient.connect(config.mongodb_url, function(connErr, db) {
                     if (connErr) {
                         console.error("Error connecting to Mongodb " + connErr);

@@ -1,9 +1,14 @@
 {
     "concur_api_url": "http://www.concursolutions.com/api/",
     "use_mongoose": "false",
-    "mongodb_url": "mongodb://localhost:27017/Concur",
+    "mongodb_server": "localhost",
+    "mongodb_port": "27017",
+    "mongodb_database": "Concur",
+    "mongodb_user": "",
+    "mongodb_password": "",
     "redis_server": "localhost",
     "redis_port": "6379",
+    "redis_password": "",
     "logging_level": "info",
     "http": {
         "port": "3000"
