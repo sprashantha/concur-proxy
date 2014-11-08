@@ -63,7 +63,7 @@ const redis = require('redis'),
                     console.log("Connected to Redis");
                     context.redisClient = redisClient;
                 })
-                callback();
+                callback(null, redisClient);
             }, 500);
         },
         function (callback) {
@@ -77,7 +77,7 @@ const redis = require('redis'),
                         console.log("Connected to Mongodb");
                         context.db = db;
                     }
-                    callback();
+                    callback(null, mongoClient);
                 })
              }, 500);
         }],
