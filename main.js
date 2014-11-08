@@ -42,7 +42,7 @@ let
 
 console.log("config.redis_server " + config.redis_server);
 console.log("config.redis_port " + config.redis_port);
-console.log("auth_pass " + nconf('auth_pass'));
+console.log("auth_pass " + nconf.get('auth_pass'));
 
 
 // Build application context
@@ -55,7 +55,7 @@ const redis = require('redis'),
     async.parallel([
         function (callback) {
             setTimeout(function () {
-                let redisClient = redis.createClient(config.redis_port, config.redis_server, {"auth_pass":nconf('auth_pass')});
+                let redisClient = redis.createClient(config.redis_port, config.redis_server, {"auth_pass":nconf.get('auth_pass')});
                 redisClient.on('error', function (err) {
                     console.error('Error connecting to Redis ' + err);
                 });
