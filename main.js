@@ -4,6 +4,7 @@ const
 	express = require('express'),
     async = require('async'),
     bodyParser = require('body-parser'),
+    logger = require('./lib/logger.js'),
 	app = express();
 
     // parse application/x-www-form-urlencoded
@@ -32,13 +33,15 @@ let
         logging_level: ''
 	};
 
+
     // Read Configuration Parameters
     nconf.argv().env();
     nconf.file({ file: 'config.json' });
-    config.mongodb_url = nconf.get('mongodb_url');
-    config.redis_server = nconf.get('redis_server');
-    config.redis_port = nconf.get('redis_port');
-    config.logging_level = nconf.get('logging_level');
+
+    // Set the logging level in case it needs to be overridden.
+    if (logging_level && logging_level != ''){
+        logger.transports.console.level = nconf.get('logging_level');
+    }
 
     console.log("config.redis_server " + config.redis_server);
     console.log("config.redis_port " + config.redis_port);
@@ -49,6 +52,10 @@ let
     console.log("mongodb_user " + nconf.get('mongodb_user'));
     console.log("mongodb_password " + nconf.get('mongodb_password'));
 
+    // Database connections
+    config.redis_server = nconf.get('redis_server');
+    config.redis_port = nconf.get('redis_port');
+
     if (nconf.get('mongodb_user') != "" && nconf.get('mongodb_password') != ""){
         config.mongodb_url = "mongodb://" + nconf.get('mongodb_user') + ":" + nconf.get('mongodb_password') + "@"
          + nconf.get('mongodb_server') + ":" + nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
@@ -57,9 +64,6 @@ let
             nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
     }
     console.log("mongodb_url " + config.mongodb_url);
-
-
-// Build application context
 
 let context = {'config': config};
 
