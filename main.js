@@ -44,18 +44,19 @@ let
         logger.transports.console.level = config.logging_level;
     }
 
+    // Redis connections
+    config.redis_server = nconf.get('redis_server');
+    config.redis_port = nconf.get('redis_port');
     console.log("config.redis_server " + config.redis_server);
     console.log("config.redis_port " + config.redis_port);
     console.log("auth_pass " + nconf.get('redis_password'));
+
+    // Mongodb connections
     console.log("mongodb_server " + nconf.get('mongodb_server'));
     console.log("mongodb_port " + nconf.get('mongodb_port'));
     console.log("mongodb_database " + nconf.get('mongodb_database'));
     console.log("mongodb_user " + nconf.get('mongodb_user'));
     console.log("mongodb_password " + nconf.get('mongodb_password'));
-
-    // Database connections
-    config.redis_server = nconf.get('redis_server');
-    config.redis_port = nconf.get('redis_port');
 
     if (nconf.get('mongodb_user') != "" && nconf.get('mongodb_password') != ""){
         config.mongodb_url = "mongodb://" + nconf.get('mongodb_user') + ":" + nconf.get('mongodb_password') + "@"
