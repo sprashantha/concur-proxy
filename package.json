@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Proxy to Concur's Web Services",
   "scripts": {
-    "start": "node --harmony ./server.js"
+    "start": "node --harmony ./main.js"
   },
   "author": "Prashanth",
   "license": "ISC",
