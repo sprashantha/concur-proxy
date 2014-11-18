@@ -23,6 +23,7 @@ let
 		concur_api_url: 'http://www.concursolutions.com/api/',
 		concur_reports_url: 'v3.0/expense/reportdigests',
 		concur_approvals_url: 'v3.0/expense/reportdigests?user=ALL&approvalStatusCode=A_PEND',
+        concur_report_2_0_url: 'expense/expensereport/v2.0/report/',
 		concur_trips_url: 'travel/trip/v1.1/',
         use_mongoose: 'false',
         mongodb_url: '',
