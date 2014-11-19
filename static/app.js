@@ -19,6 +19,18 @@ app.config(function($routeProvider, $httpProvider){
             templateUrl: 'home.html',
             controller: 'homeController'
         })
+        .when('/trips', {
+            templateUrl: 'trips.html',
+            controller: 'tripsController'
+        })
+        .when('/expenses', {
+            templateUrl: 'reports.html',
+            controller: 'expenseController'
+        })
+        .when('/approvals', {
+            templateUrl: 'approvals.html',
+            controller: 'approvalsController'
+        })
 
 });
 
@@ -26,6 +38,21 @@ app.config(function($routeProvider, $httpProvider){
 app.controller("homeController", function($scope,$rootScope,$http){
     $http({method: 'GET', url: '/concur/api/home', headers: {'authorization': $rootScope.token}})
         .success(function(response){$scope.home = response;});
+});
+
+app.controller("tripsController", function($scope,$rootScope,$http){
+    $http({method: 'GET', url: '/concur/api/trips', headers: {'authorization': $rootScope.token}})
+        .success(function(response){$scope.trips = response;});
+});
+
+app.controller("expenseController", function($scope,$rootScope,$http){
+    $http({method: 'GET', url: '/concur/api/reports', headers: {'authorization': $rootScope.token}})
+        .success(function(response){$scope.reports = response;});
+});
+
+app.controller("approvalsController", function($scope,$rootScope,$http){
+    $http({method: 'GET', url: '/concur/api/approvals', headers: {'authorization': $rootScope.token}})
+        .success(function(response){$scope.approvals = response;});
 });
 
 app.controller("logoutController", function($scope,$rootScope,$http){

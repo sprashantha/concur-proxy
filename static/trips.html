@@ -1,0 +1,41 @@
+
+<div>
+    <nav class="navbar">
+        <div class="container">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#home"><i class="fa fa-comment"></i> Home</a></li>
+                <li><a href="#expenses"><i class="fa fa-comment"></i> Expenses</a></li>
+                <li><a href="#approvals"><i class="fa fa-comment"></i> Approvals</a></li>
+                <li><a href="#logout"><i class="fa fa-comment"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div ng-hide="trips">
+        <img src="spiffygif_30x30.gif">
+    </div>
+
+    <h2 ng-show="trips.length">Upcoming Trips ({{trips.length}})</h2>
+    <div ng-show="trips.error">
+        <h2>Upcoming Trips </h2>
+        <p>({{trips.error}})</p>
+    </div>
+    <table ng-show="trips.length">
+        <thead>
+        <tr>
+            <th>Trip Name</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Record Locator</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="t in trips">
+            <td>{{ t.TripName }}</td>
+            <td>{{ t.StartDateLocal }}</td>
+            <td>{{ t.EndDateLocal }}</td>
+            <td>{{ t.RecordLocator }}</td>
+        </tr>
+        </tbody>
+    </table>
+  </div>

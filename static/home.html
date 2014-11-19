@@ -3,6 +3,9 @@
     <nav class="navbar">
         <div class="container">
             <ul class="nav navbar-nav navbar-right">
+                <li><a href="#trips"><i class="fa fa-comment"></i> Trips</a></li>
+                <li><a href="#expenses"><i class="fa fa-comment"></i> Expenses</a></li>
+                <li><a href="#approvals"><i class="fa fa-comment"></i> Approvals</a></li>
                 <li><a href="#logout"><i class="fa fa-comment"></i> Logout</a></li>
             </ul>
         </div>
@@ -36,7 +39,7 @@
           </tbody>
       </table>
 
-      <h2 ng-show="home.reports.Items.length">Unsubmitted Reports ({{home.reports.Items.length}})</h2>
+      <h2 ng-show="home.reports.Items.length">Active Reports ({{home.reports.Items.length}})</h2>
       <table ng-show="home.reports.Items.length">
           <thead>
           <tr>
