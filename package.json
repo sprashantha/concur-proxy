@@ -17,6 +17,8 @@
     "urlencode": "~0.2.0",
     "nconf": "~0.6.9",
     "redis": "~0.12.1",
-    "mongodb": "~1.4.19"
+    "mongodb": "~1.4.19",
+    "json2xml": "~0.1.1",
+    "xml2json": "~0.5.1"
   }
 }
