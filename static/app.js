@@ -31,6 +31,10 @@ app.config(function($routeProvider, $httpProvider){
             templateUrl: 'approvals.html',
             controller: 'approvalsController'
         })
+        .when('/approvals/:reportId', {
+            templateUrl: 'approvalDetails.html',
+            controller: 'approvalDetailsController'
+        })
 
 });
 
@@ -54,6 +58,25 @@ app.controller("approvalsController", function($scope,$rootScope,$http){
     $http({method: 'GET', url: '/concur/api/approvals', headers: {'authorization': $rootScope.token}})
         .success(function(response){$scope.approvals = response;});
 });
+
+app.controller("approvalDetailsController", function($scope,$rootScope,$http, $routeParams){
+    $http({method: 'GET', url: '/concur/api/approvals/' + $routeParams.reportId, headers: {'authorization': $rootScope.token}})
+        .success(function(response){$scope.approvalDetail = response;});
+});
+
+app.controller("workflowController", function($scope,$rootScope, $http){
+    $scope.approveReport = function(){
+        $http({method: 'POST',
+            url: '/concur/api/approvals/' + $scope.approvalDetail.ReportID,
+            headers: {'authorization': $rootScope.token},
+            data: {"WorkflowAction": {"Action": "Approve", "Comment": "Approved via Concur Connect"}}})
+            .success(function(response){
+                $scope.message = response;
+                $location.path('/approvals');
+            });
+    }
+});
+
 
 app.controller("logoutController", function($scope,$rootScope,$http){
     $rootScope.remove("token");

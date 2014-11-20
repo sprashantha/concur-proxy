@@ -1,0 +1,50 @@
+
+<div>
+    <nav class="navbar">
+        <div class="container">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#home"><i class="fa fa-comment"></i> Home</a></li>
+                <li><a href="#trips"><i class="fa fa-comment"></i> Trips</a></li>
+                <li><a href="#expenses"><i class="fa fa-comment"></i> Expenses</a></li>
+                <li><a href="#logout"><i class="fa fa-comment"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div ng-hide="approvalDetail">
+        <img src="spiffygif_30x30.gif">
+    </div>
+
+
+      <h2 ng-show="approvalDetail">Report Detail</h2>
+      <div ng-show="approvalDetail" ng-controller="workflowController">
+          Employee Name: {{approvalDetail.EmployeeName}} <br>
+          Report Name: {{approvalDetail.ReportName}} <br>
+          ReportID: {{approvalDetail.ReportID}} <br>
+          Report Date: {{approvalDetail.ReportDate}} <br>
+          Report Total: {{approvalDetail.ReportTotal}} <br>
+
+      <h2 ng-show="approvalDetail">Expense Line Items</h2>
+        <table ng-show="approvalDetail.ExpenseEntriesList.length">
+            <thead>
+            <tr>
+                <th>Expense Type</th>
+                <th>Payment Type</th>
+                <th>Transaction Date</th>
+                <th>Transaction Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="e in approvalDetail.ExpenseEntriesList">
+                <td>{{ e.ExpenseTypeName }}</td>
+                <td>{{ e.PaymentTypeName }}</td>
+                <td>{{ e.TransactionDate }}</td>
+                <td>{{ e.TransactionAmount | currency }}</td>
+            </tr>
+            </tbody>
+        </table><br>
+          <div>
+            <p><button ng-click="approveReport()">Approve Report</button></p>
+          </div>
+    </div>
+  </div>

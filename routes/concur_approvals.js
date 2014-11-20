@@ -38,6 +38,8 @@ module.exports = function(context, app, router) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;
 
+            logger.debug("reportId: " + reportId);
+
             let options = {
                 method: 'GET',
                 url: context.config.concur_api_url + context.config.concur_report_2_0_url + reportId,
@@ -46,6 +48,7 @@ module.exports = function(context, app, router) {
                     "Accept": "application/json"
                 }
             }
+            logger.debug("options.url: " + options.url);
             request(options, function (err, couchRes, body) {
                 if (err) {
                     res.json(502, {error: "bad_gateway", reason: err.code});

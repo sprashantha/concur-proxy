@@ -6,6 +6,7 @@
                 <li><a href="#home"><i class="fa fa-comment"></i> Home</a></li>
                 <li><a href="#trips"><i class="fa fa-comment"></i> Trips</a></li>
                 <li><a href="#expenses"><i class="fa fa-comment"></i> Expenses</a></li>
+                <li><a href="#approvals"><i class="fa fa-comment"></i> Approvals</a></li>
                 <li><a href="#logout"><i class="fa fa-comment"></i> Logout</a></li>
             </ul>
         </div>
@@ -15,6 +16,7 @@
         <img src="spiffygif_30x30.gif">
     </div>
 
+      <h2 ng-show="message">{{message}}</h2>
 
       <h2 ng-show="approvals.Items.length">Pending Approvals ({{approvals.Items.length}})</h2>
       <table ng-show="approvals.Items.length">
@@ -28,7 +30,7 @@
           </thead>
           <tbody>
           <tr ng-repeat="a in approvals.Items">
-              <td>{{ a.Name }}</td>
+              <td><a ng-href="#/approvals/{{a.ID}}">{{ a.Name }}</a></td>
               <td>{{ a.OwnerName }}</td>
               <td>{{ a.SubmitDate }}</td>
               <td>{{ a.Total | currency }}</td>
