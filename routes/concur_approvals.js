@@ -7,7 +7,8 @@ const
     xml2json = require('xml2json'),
     async = require('async'),
     logger = require('../lib/logger.js'),
-    util = require('../lib/util.js');
+    util = require('../lib/util.js'),
+    cache = require('../lib//models/cache.js');
 
 	
 module.exports = function(context, app, router) {
@@ -120,15 +121,18 @@ module.exports = function(context, app, router) {
                             res.json(502, {error: "bad_gateway", reason: err.code});
                             return;
                         }
-                        logger.debug("request body: " + body.toString());
-                        jsonBody = xml2json.toJson(body);
-                        logger.debug("request json body " + jsonBody);
-                        callback(null, jsonBody);
+                        if (body){
+                            logger.debug("request body: " + body.toString());
+                            jsonBody = xml2json.toJson(body);
+
+                            cache.clearCache("home", access_token, context);
+                            logger.debug("response json body " + jsonBody);
+                            res.json(jsonBody);
+                            return;
+                        }
                     });
                 }
-            ], function (err, jsonBody) {
-                res.json(jsonBody);
-                return;
-            });
+            ]
+            );
         });
 }

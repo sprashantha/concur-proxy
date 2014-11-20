@@ -71,8 +71,11 @@ app.controller("workflowController", function($scope,$rootScope, $http){
             headers: {'authorization': $rootScope.token},
             data: {"WorkflowAction": {"Action": "Approve", "Comment": "Approved via Concur Connect"}}})
             .success(function(response){
-                $scope.message = response;
-                $location.path('/approvals');
+                if (response){
+                    $scope.message = response.ActionStatus.Status;
+                }
+//                $location.path('/approvals');
+                alert("Report approved.");
             });
     }
 });

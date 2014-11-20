@@ -19,7 +19,7 @@
 10 error There is likely additional logging output above.
 11 error System Darwin 13.3.0
 12 error command "node" "/usr/local/bin/npm" "start"
-13 error cwd /Users/prashantha/Documents/dev/concur-proxy-branches/concur-proxy
+13 error cwd /Users/prashantha/Documents/dev/concur-proxy
 14 error node -v v0.10.25
 15 error npm -v 1.3.24
 16 error code ELIFECYCLE

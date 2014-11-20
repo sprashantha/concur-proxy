@@ -16,7 +16,7 @@
     </div>
 
 
-      <h2 ng-show="approvalDetail">Report Detail</h2>
+      <h1 ng-show="approvalDetail">Expense Report: {{approvalDetail.ReportName}} </h1>
       <div ng-show="approvalDetail" ng-controller="workflowController">
           Employee Name: {{approvalDetail.EmployeeName}} <br>
           Report Name: {{approvalDetail.ReportName}} <br>
@@ -24,7 +24,7 @@
           Report Date: {{approvalDetail.ReportDate}} <br>
           Report Total: {{approvalDetail.ReportTotal}} <br>
 
-      <h2 ng-show="approvalDetail">Expense Line Items</h2>
+      <h1 ng-show="approvalDetail">Expense Line Items</h1>
         <table ng-show="approvalDetail.ExpenseEntriesList.length">
             <thead>
             <tr>
