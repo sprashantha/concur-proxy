@@ -65,74 +65,76 @@ module.exports = function(context, app, router) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;
 
-            async.waterfall([
-                function (callback) {
-                    let options = {
-                        method: 'GET',
-                        url: context.config.concur_api_url + context.config.concur_report_2_0_url + reportId,
-                        headers: {
-                            "Authorization": "OAuth " + access_token,
-                            "Accept": "application/json"
-                        }
-                    }
-                    let approvalURL;
-                    request(options, function (err, couchRes, body) {
-                        if (err) {
-                            res.json(502, {error: "bad_gateway", reason: err.code});
-                            return;
-                        }
-                        let jsonBody = JSON.parse(body);
-                        approvalURL = jsonBody.WorkflowActionURL;
-                        logger.debug("approvalURL: " + approvalURL);
-                        callback(null, approvalURL);
-                    });
-                },
-                function (approvalURL, callback) {
+            let options = {
+                method: 'GET',
+                url: context.config.concur_api_url + context.config.concur_report_2_0_url + reportId,
+                headers: {
+                    "Authorization": "OAuth " + access_token,
+                    "Accept": "application/json"
+                }
+            }
 
-                    // Incoming JSON body looks like
+            request(options, function (err, getResp, report) {
+                if (err) {
+                    res.json(502, {error: "bad_gateway", reason: err.code});
+                    return;
+                }
+                let approvalURL;
+                if (report) {
+                    logger.debug("report: " + report.toString());
+                    let jsonBody = JSON.parse(report);
+                    approvalURL = jsonBody.WorkflowActionURL;
+                    logger.debug("approvalURL: " + approvalURL);
+                }
+                else
+                {
+                    logger.debug("Could not retrieve report");
+                    res.json(502, {error: "bad_gateway", reason: 'Read report error'});
+                    return;
+                }
+
+                // Incoming JSON body looks like
 //            {
 //                    "WorkflowAction": {
 //                            "Action": "Approve",
 //                            "Comment": "Approved via Concur Connect"
 //                    }
 //                }
-                    // Hack to make the xml request work.
-                    let bodyXml = json2xml(req.body);
-                    bodyXml = bodyXml.replace("<WorkflowAction>",
-                        "<WorkflowAction xmlns=\"http://www.concursolutions.com/api/expense/expensereport/2011/03\">")
+                // Hack to make the xml request work.
+                let bodyXml = json2xml(req.body);
+                bodyXml = bodyXml.replace("<WorkflowAction>",
+                    "<WorkflowAction xmlns=\"http://www.concursolutions.com/api/expense/expensereport/2011/03\">")
 
-                    logger.debug("bodyJson: " + JSON.stringify(req.body));
-                    logger.debug("bodyXML: " + bodyXml);
+                logger.debug("bodyJson: " + JSON.stringify(req.body));
+                logger.debug("bodyXML: " + bodyXml);
 
-                    let options = {
-                        method: 'POST',
-                        url: approvalURL,
-                        headers: {
-                            "Authorization": "OAuth " + access_token,
-                            "Content-Type": "application/xml"
-                        },
-                        body: bodyXml
-                    }
-                    logger.debug("bodyXml: " + bodyXml);
-                    logger.debug("options url: " + options.url);
-                    let jsonBody;
-                    request(options, function (err, couchRes, body) {
-                        if (err) {
-                            res.json(502, {error: "bad_gateway", reason: err.code});
-                            return;
-                        }
-                        if (body){
-                            logger.debug("request body: " + body.toString());
-                            jsonBody = xml2json.toJson(body);
-
-                            cache.clearCache("home", access_token, context);
-                            logger.debug("response json body " + jsonBody);
-                            res.json(jsonBody);
-                            return;
-                        }
-                    });
+                let options1 = {
+                    method: 'POST',
+                    url: approvalURL,
+                    headers: {
+                        "Authorization": "OAuth " + access_token,
+                        "Content-Type": "application/xml"
+                    },
+                    body: bodyXml
                 }
-            ]
-            );
+                logger.debug("bodyXml: " + bodyXml);
+                logger.debug("options url: " + options1.url);
+                request(options1, function (postErr, postResp, approvalResponse) {
+                    if (postErr) {
+                        res.json(502, {error: "bad_gateway", reason: postErr.code});
+                        return;
+                    }
+                    if (approvalResponse) {
+                        logger.debug("request body: " + approvalResponse.toString());
+                        let jsonBody = xml2json.toJson(approvalResponse);
+
+                        cache.clearCache("home", access_token, context);
+                        logger.debug("response json body " + jsonBody);
+                        res.status(200).json({"STATUS": "SUCCESS"});
+                        return;
+                    }
+
+                });
+            });
         });
 }

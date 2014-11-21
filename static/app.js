@@ -64,7 +64,7 @@ app.controller("approvalDetailsController", function($scope,$rootScope,$http, $r
         .success(function(response){$scope.approvalDetail = response;});
 });
 
-app.controller("workflowController", function($scope,$rootScope, $http){
+app.controller("workflowController", function($scope,$rootScope, $http, $location){
     $scope.approveReport = function(){
         $http({method: 'POST',
             url: '/concur/api/approvals/' + $scope.approvalDetail.ReportID,
@@ -72,10 +72,10 @@ app.controller("workflowController", function($scope,$rootScope, $http){
             data: {"WorkflowAction": {"Action": "Approve", "Comment": "Approved via Concur Connect"}}})
             .success(function(response){
                 if (response){
-                    $scope.message = response.ActionStatus.Status;
+                    alert("Report Approval Status: " + response.STATUS);
                 }
-//                $location.path('/approvals');
-                alert("Report approved.");
+                $location.path('/approvals');
+
             });
     }
 });

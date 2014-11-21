@@ -17,10 +17,18 @@
 
 
       <h1 ng-show="approvalDetail">Expense Report: {{approvalDetail.ReportName}} </h1>
-      <div ng-show="approvalDetail" ng-controller="workflowController">
+    <div ng-show="approvalDetail" ng-controller="workflowController">
+    <form name="approvalDetailForm"
+          ng-submit="approveReport()" novalidate>
+        <div class="form-group">
+            <label for="reportId">ReportID:</label>
+            <input type="hidden" class="form-control" id="reportId"
+                   ng-model="approvalDetail.ReportID">
+        </div>
+
           Employee Name: {{approvalDetail.EmployeeName}} <br>
           Report Name: {{approvalDetail.ReportName}} <br>
-          ReportID: {{approvalDetail.ReportID}} <br>
+          Report ID: {{approvalDetail.ReportID}} <br>
           Report Date: {{approvalDetail.ReportDate}} <br>
           Report Total: {{approvalDetail.ReportTotal}} <br>
 
@@ -44,7 +52,8 @@
             </tbody>
         </table><br>
           <div>
-            <p><button ng-click="approveReport()">Approve Report</button></p>
+            <p><button>Approve Report</button></p>
           </div>
+        </form>
     </div>
   </div>
