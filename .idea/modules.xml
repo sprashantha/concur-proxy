@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/couchdb-test.iml" filepath="$PROJECT_DIR$/.idea/couchdb-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/concur-proxy.iml" filepath="$PROJECT_DIR$/.idea/concur-proxy.iml" />
     </modules>
   </component>
 </project>

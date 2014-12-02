@@ -66,15 +66,17 @@ app.controller("approvalDetailsController", function($scope,$rootScope,$http, $r
 
 app.controller("workflowController", function($scope,$rootScope, $http, $location){
     $scope.approveReport = function(){
+        $scope.loading = true;
         $http({method: 'POST',
             url: '/concur/api/approvals/' + $scope.approvalDetail.ReportID,
             headers: {'authorization': $rootScope.token},
             data: {"WorkflowAction": {"Action": "Approve", "Comment": "Approved via Concur Connect"}}})
             .success(function(response){
                 if (response){
-                    alert("Report Approval Status: " + response.STATUS);
+                    alert(" Approval Status: " + response.STATUS);
+                    $scope.loading = false;
+                    $location.path('/approvals');
                 }
-                $location.path('/approvals');
 
             });
     }

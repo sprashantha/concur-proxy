@@ -119,22 +119,49 @@ module.exports = function(context, app, router) {
                 }
                 logger.debug("bodyXml: " + bodyXml);
                 logger.debug("options url: " + options1.url);
-                request(options1, function (postErr, postResp, approvalResponse) {
-                    if (postErr) {
-                        res.json(502, {error: "bad_gateway", reason: postErr.code});
-                        return;
-                    }
-                    if (approvalResponse) {
-                        logger.debug("request body: " + approvalResponse.toString());
-                        let jsonBody = xml2json.toJson(approvalResponse);
 
-                        cache.clearCache("home", access_token, context);
-                        logger.debug("response json body " + jsonBody);
-                        res.status(200).json({"STATUS": "SUCCESS"});
-                        return;
-                    }
+                if (context.config.use_pubsub == 'true'){
+                    util.publish("Approvals", JSON.stringify(options1), context, function(pubErr){
+                        if (pubErr){
+                            res.json(502, {error: "bad_gateway", reason: pubErr.code});
+                        }
+                        else{
+                            res.status(200).json({"STATUS": "QUEUED"});
+                            return;
+                        }
+                    });
+                }
+                else if (context.config.use_sqs == 'true') {
+                    util.sendApprovalSQSMessage(JSON.stringify(options1), context, function(sendErr, data){
+                        if (sendErr){
+                            res.json(502, {error: "bad_gateway", reason: sendErr.code});
+                        }
+                        else{
+                            res.status(200).json({"STATUS": "QUEUED"});
+                            return;
+                        }
+                    });
 
-                });
-            });
+                }
+                else{
+                    request(options1, function (postErr, postResp, approvalResponse) {
+                        if (postErr) {
+                            res.json(502, {error: "bad_gateway", reason: postErr.code});
+                            return;
+                        }
+                        if (approvalResponse) {
+                            logger.debug("request body: " + approvalResponse.toString());
+                            let jsonBody = xml2json.toJson(approvalResponse);
+
+                            cache.clearCache("home", access_token, context);
+                            logger.debug("response json body " + jsonBody);
+                            res.status(200).json({"STATUS": "SUCCESS"});
+                            return;
+                        }
+
+                    });
+
+                }
+           });
         });
 }

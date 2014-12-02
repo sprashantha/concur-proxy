@@ -27,6 +27,8 @@ let
         concur_report_1_1_url: 'expense/expensereport/v1.1/report/',
 		concur_trips_url: 'travel/trip/v1.1/',
         use_mongoose: 'false',
+        use_pubsub: 'false',
+        use_sqs: 'true',
         mongodb_url: '',
         redis_server: '',
         redis_port: '',
@@ -69,8 +71,15 @@ let
 
 let context = {'config': config};
 
+// Connect to Cloud services - Redis, MongoDB, SQS, S3
 const redis = require('redis'),
-      mongoClient = require('mongodb').MongoClient;
+      mongoClient = require('mongodb').MongoClient,
+      AWS = require('aws-sdk'),
+      awsCredentialsPath = './aws.credentials.json',
+      sqsQueueUrl = 'https://sqs.us-west-2.amazonaws.com/749188282015/report-approvals';
+
+      AWS.config.loadFromPath(awsCredentialsPath);
+
 
     async.parallel([
         function (callback) {
@@ -101,6 +110,81 @@ const redis = require('redis'),
                     callback(null, mongoClient);
                 })
              }, 500);
+        },
+        function (callback){
+            setTimeout(function(){
+                let s3 = new AWS.S3();
+                context.s3 = s3;
+
+                // Test Connection to S3
+                s3.listBuckets(function(err, data) {
+                    console.log("Connecting to AWS S3...");
+                    console.log("Number of S3 buckets: " + data.Buckets.length);
+                    callback(null, s3);
+                })
+            }, 500);
+        },
+        function (callback){
+            setTimeout(function(){
+                let sqs = new AWS.SQS();
+                context.sqs = sqs;
+                context.sqsQueueUrl = sqsQueueUrl;
+
+                // Test SQS Connection
+                let params = {
+                    MessageBody: "This is a Test Message",
+                    QueueUrl: sqsQueueUrl,
+                    DelaySeconds: 0
+                }
+
+                // Send a test message to SQS.
+                console.log("Sending a test message to SQS...");
+                sqs.sendMessage(params, function(sendErr, data) {
+                    if (sendErr){
+                        console.log(sendErr, sendErr.stack);
+                    }
+                    else{
+
+                        console.log(data);
+
+                        // Receive the message.
+                        sqs.receiveMessage({
+                            QueueUrl: sqsQueueUrl,
+                            MaxNumberOfMessages: 1, // how many messages do we wanna retrieve?
+                            VisibilityTimeout: 0, // seconds - how long we want a lock on this job
+                            WaitTimeSeconds: 0 // seconds - how long should we wait for a message?
+                        }, function(recvErr, recvData) {
+                            if (recvErr){
+                                console.log(recvErr, recvErr.stack);
+                            }
+                            if (recvData && recvData.Messages){
+                                // Read the message
+                                console.log("Received SQS Messages: " + recvData.Messages.toString());
+                                let message = recvData.Messages[0];
+                                console.log("Received SQS Message: " + message.toString());
+                                console.log("message.MessageId: " + message.MessageId);
+                                console.log("data.MessageId: " + data.MessageId);
+                                if (message.MessageId == data.MessageId){
+                                    // Delete the message
+                                    console.log("Deleting SQS Message with MessageId: " + data.MessageId);
+                                    sqs.deleteMessage({
+                                        QueueUrl: sqsQueueUrl,
+                                        ReceiptHandle: message.ReceiptHandle
+                                    }, function(delErr, delData){
+                                        if (delErr){
+                                            console.log(delErr);
+                                        }
+                                        else{
+                                            console.log("Deleted message.")
+                                        }
+                                    })
+                                }
+                            }
+                            callback();
+                        });
+                    }
+                })
+            }, 500);
         }],
         function (err, results) {
             if (err) {
