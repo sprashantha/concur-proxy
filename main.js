@@ -8,10 +8,10 @@ const
 	app = express();
 
     // parse application/x-www-form-urlencoded
-    app.use(bodyParser.urlencoded({ extended: false }))
+    app.use(bodyParser.urlencoded({ extended: false }));
 
     // parse application/json
-     app.use(bodyParser.json())
+     app.use(bodyParser.json());
 
     // Static content
 	app.use(express.static(__dirname + '/static'));
@@ -75,7 +75,7 @@ let context = {'config': config};
 const redis = require('redis'),
       mongoClient = require('mongodb').MongoClient,
       AWS = require('aws-sdk'),
-      awsCredentialsPath = './aws.credentials.json',
+      awsCredentialsPath = '../aws.credentials.json',
       sqsQueueUrl = 'https://sqs.us-west-2.amazonaws.com/749188282015/report-approvals';
 
       AWS.config.loadFromPath(awsCredentialsPath);
@@ -132,7 +132,7 @@ const redis = require('redis'),
 
                 // Test SQS Connection
                 let params = {
-                    MessageBody: "This is a Test Message",
+                    MessageBody: '{"Test": "true", "Message":"This is a Test Message"}',
                     QueueUrl: sqsQueueUrl,
                     DelaySeconds: 0
                 }

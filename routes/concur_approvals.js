@@ -79,11 +79,11 @@ module.exports = function(context, app, router) {
                     res.json(502, {error: "bad_gateway", reason: err.code});
                     return;
                 }
-                let approvalURL;
+                let approvalURL, reportJson;
                 if (report) {
                     logger.debug("report: " + report.toString());
-                    let jsonBody = JSON.parse(report);
-                    approvalURL = jsonBody.WorkflowActionURL;
+                    reportJson = JSON.parse(report);
+                    approvalURL = reportJson.WorkflowActionURL;
                     logger.debug("approvalURL: " + approvalURL);
                 }
                 else
@@ -117,27 +117,43 @@ module.exports = function(context, app, router) {
                     },
                     body: bodyXml
                 }
-                logger.debug("bodyXml: " + bodyXml);
-                logger.debug("options url: " + options1.url);
-
+                // logger.debug("options1: " + JSON.stringify(options1));
+                logger.debug("report.UserLoginID: " + report.UserLoginID);
+                logger.debug("report.ReportName: " + report.ReportName);
+                logger.debug("report.SubmitDate: " + report.SubmitDate);
+                
+                let queueMessage = {
+                    type: 'Report',
+                    userLoginID: reportJson.UserLoginID,
+                    name: reportJson.ReportName,
+                    submitDate: reportJson.SubmitDate,
+                    options: options1
+                };
+//                queueMessage.type = "Report";
+//                queueMessage.UserLoginID = report.UserLoginID;
+//                queueMessage.name = report.ReportName;
+//                queueMessage.SubmitDate = report.SubmitDate;
+//                queueMessage.options = options1;
                 if (context.config.use_pubsub == 'true'){
-                    util.publish("Approvals", JSON.stringify(options1), context, function(pubErr){
+                    logger.debug("queueMessage: " + JSON.stringify(queueMessage));
+                    util.publish("Approvals", JSON.stringify(queueMessage), context, function(pubErr){
                         if (pubErr){
                             res.json(502, {error: "bad_gateway", reason: pubErr.code});
                         }
                         else{
-                            res.status(200).json({"STATUS": "QUEUED"});
+                            res.status(200).json({"STATUS": "QUEUED FOR APPROVAL"});
                             return;
                         }
                     });
                 }
                 else if (context.config.use_sqs == 'true') {
-                    util.sendApprovalSQSMessage(JSON.stringify(options1), context, function(sendErr, data){
+                    logger.debug("queueMessage: " + JSON.stringify(queueMessage));
+                    util.sendApprovalSQSMessage(JSON.stringify(queueMessage), context, function(sendErr, data){
                         if (sendErr){
                             res.json(502, {error: "bad_gateway", reason: sendErr.code});
                         }
                         else{
-                            res.status(200).json({"STATUS": "QUEUED"});
+                            res.status(200).json({"STATUS": "QUEUED FOR APPROVAL"});
                             return;
                         }
                     });
