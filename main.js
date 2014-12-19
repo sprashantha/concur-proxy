@@ -71,14 +71,21 @@ let
 
 let context = {'config': config};
 
-// Connect to Cloud services - Redis, MongoDB, SQS, S3
+// Connect to database services - Redis and MongoDB
 const redis = require('redis'),
-      mongoClient = require('mongodb').MongoClient,
+      mongoClient = require('mongodb').MongoClient;
+
+// Connect to AWS Services
+const
       AWS = require('aws-sdk'),
-      awsCredentialsPath = '../aws.credentials.json',
+//      awsCredentialsPath = '../aws.credentials.json',
       sqsQueueUrl = 'https://sqs.us-west-2.amazonaws.com/749188282015/report-approvals';
 
-      AWS.config.loadFromPath(awsCredentialsPath);
+//      AWS.config.loadFromPath(awsCredentialsPath);
+     // You need to set the region to access SQS. Not needed for S3. Also no need to load the credentials manually.
+     // The SDK automatically loads it from the credentials file in the ~/.aws/credentials file (look under prashantha).
+     // If running in EC2, then it uses the IAM role associated with the EC2 instance.
+     AWS.config.update({region: 'us-west-2'});
 
 
     async.parallel([
@@ -144,7 +151,7 @@ const redis = require('redis'),
                         console.log(sendErr, sendErr.stack);
                     }
                     else{
-
+                        console.log("Received SQS Response:");
                         console.log(data);
 
                         // Receive the message.
