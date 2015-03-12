@@ -1,0 +1,841 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v4",
+        "title": "Expense reports API.",
+        "description": "This set of APIs deals with retrieving, saving, deleting and        submitting expense reports.\n"
+    },
+    "host": "api.concur.com",
+    "basePath": "/expense/report/v4",
+    "paths": {
+        "/reports/links": {
+            "get": {
+                "tags": [
+                    "root"
+                ],
+                "operationId": "getReportLinks",
+                "description": "Gets all the top-level API endpoints for expense reports.\n",
+                "responses": {
+                    "200": {
+                        "description": "An array of API endpoint links. All the API endpoints are listed here.\n",
+                        "schema": {
+                            "title": "ArrayOfLinks",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Link"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/reports": {
+            "get": {
+                "tags": [
+                    "reports"
+                ],
+                "operationId": "getReportsForUser",
+                "description": "Gets reports belonging to a user. These reports may be unsubmitted or submitted and can be filtered by status criteria and time period. The reports are sorted from the most recent to the oldest creation date.\n",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtering criteria for reports to be retrieved.",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "unsubmitted",
+                            "active",
+                            "pending",
+                            "approved",
+                            "processed",
+                            "paid",
+                            "paymentConfirmed"
+                        ]
+                    },
+                    {
+                        "name": "timePeriod",
+                        "in": "query",
+                        "description": "Time period based on creation date.",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "thisMonth",
+                            "lastMonth",
+                            "thisQuarter",
+                            "lastQuarter",
+                            "thisYear",
+                            "lastYear"
+                        ]
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Size of array. Has to be at most 500.",
+                        "required": false,
+                        "type": "number",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of expense reports matching the criteria.\n",
+                        "schema": {
+                            "title": "ArrayOfReports",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Report"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "reports"
+                ],
+                "operationId": "createReport",
+                "description": "Creates a new report.\n",
+                "parameters": [
+                    {
+                        "name": "report",
+                        "in": "body",
+                        "description": "Report to add to the system",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Report"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the user",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Report created.",
+                        "schema": {
+                            "title": "ReportLink",
+                            "description": "A link to the report resource with the URL - https://{host}/expense/v4/users/{userId}/reports/{reportId}\n",
+                            "type": "object",
+                            "$ref": "#/definitions/Link"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/reports/{reportId}": {
+            "get": {
+                "tags": [
+                    "reports"
+                ],
+                "operationId": "getReportForUser",
+                "description": "Gets the details of a report.\n",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the report.",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Report details.",
+                        "schema": {
+                            "title": "Report",
+                            "$ref": "#/definitions/Report"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/reports/{reportId}/submission": {
+            "get": {
+                "tags": [
+                    "reports"
+                ],
+                "operationId": "getSubmissionDetails",
+                "description": "Gets the submission details of a report including approval status, payment status, approver, etc.\n",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the report.",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Workflow status of the report.",
+                        "schema": {
+                            "title": "Workflow Status",
+                            "$ref": "#/definitions/WorkflowStatus"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "reports"
+                ],
+                "operationId": "submitReport",
+                "description": "Submit the report",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the report.",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted. Responds with the Workflow Status of the report. The report may be queued for submission. Calling GET on this URL at a later time may return the actual approval status of the report such as Pending Approval.",
+                        "schema": {
+                            "title": "Workflow Status",
+                            "$ref": "#/definitions/WorkflowStatus"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/reports/{reportId}/expenses": {
+            "get": {
+                "tags": [
+                    "reports"
+                ],
+                "operationId": "getExpenses",
+                "description": "Gets the expenses associated with a report.\n",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the report.",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of expenses associated with the report.\n",
+                        "schema": {
+                            "title": "ArrayOfExpenses",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Expense"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "reports"
+                ],
+                "operationId": "createExpense",
+                "description": "Creates a new expense item in a report.\n",
+                "parameters": [
+                    {
+                        "name": "Expense",
+                        "in": "body",
+                        "description": "Expense to add to the report",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Expense"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "in": "path",
+                        "description": "ID of the report",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Expense created.",
+                        "schema": {
+                            "title": "ExpenseLink",
+                            "description": "A link to the expense resource with the URL - https://{host}/expense/report/v4/users/{userid}/reports/{reportId}/expenses/{expenseId}\n",
+                            "type": "object",
+                            "$ref": "#/definitions/Link"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/reports/{reportId}/expenses/{expenseId}": {
+            "get": {
+                "tags": [
+                    "reports"
+                ],
+                "operationId": "getExpense",
+                "description": "Gets the expenses associated with a report.\n",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the report.",
+                        "required": true
+                    },
+                    {
+                        "name": "expenseId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the expense.",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Expense associated with the expenseId.\n",
+                        "schema": {
+                            "title": "Expense",
+                            "type": "object",
+                            "schema": {
+                                "$ref": "#/definitions/Expense"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/approvers/{userId}/reports": {
+            "get": {
+                "tags": [
+                    "approvals"
+                ],
+                "operationId": "getReportsToApprove",
+                "description": "Gets reports to approve for an approver. The reports are sorted from the most recent to the oldest  SubmitDate.\n",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the approver",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Size of array. Has to be at most 500.",
+                        "required": false,
+                        "type": "number",
+                        "format": "double"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of expense reports that are pending approval.\n",
+                        "schema": {
+                            "title": "ArrayOfReports",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Report"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/approvers/{userId}/reports/{reportId}": {
+            "get": {
+                "tags": [
+                    "approvals"
+                ],
+                "operationId": "getReportToApprove",
+                "description": "Gets the details of a report.\n",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the approver",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the report.",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Report details.",
+                        "schema": {
+                            "title": "Report",
+                            "$ref": "#/definitions/Report"
+                        }
+                    }
+                }
+            }
+        },
+        "/approvers/{userId}/reports/{reportId}/approval": {
+            "get": {
+                "tags": [
+                    "approvals"
+                ],
+                "operationId": "getApproval",
+                "description": "Gets the approval details of a report including its approval status, payment status and approver information.\n",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the approver",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the report.",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Approval status of the report.",
+                        "schema": {
+                            "title": "Report",
+                            "$ref": "#/definitions/WorkflowStatus"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "approvals"
+                ],
+                "operationId": "approveReport",
+                "description": "Approve or reject the report",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "Approval",
+                        "in": "body",
+                        "description": "The approval action for the report.",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ApprovalInfo"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "guid identifying the approver",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "reportId",
+                        "type": "string",
+                        "in": "path",
+                        "description": "ID of the report.",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted. Responds with the Workflow Status of the report. The report may be queued for approval or rejection. Calling GET on this URL at a later time may return the actual approval status of the report such as Approved. This also contains the Payment Status of the report and the approver information.",
+                        "schema": {
+                            "title": "Workflow Status",
+                            "$ref": "#/definitions/WorkflowStatus"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "Report": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "reportID": {
+                    "type": "string",
+                    "description": "Unique id of the report."
+                },
+                "href": {
+                    "type": "string",
+                    "description": "URL to self-https://{host}/users/{userid}/reports/{reportid}\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Name of the report."
+                },
+                "purpose": {
+                    "type": "string",
+                    "description": "Business purpose of the report."
+                },
+                "total": {
+                    "type": "number",
+                    "description": "The total requested amount in the currency represented by the currencyCode field."
+                },
+                "currencyCode": {
+                    "type": "string",
+                    "description": "ISO 4217 currency code of the submitter's reimbursement currency."
+                },
+                "createDate": {
+                    "type": "string",
+                    "description": "Creation date in ISO-8601 UTC format."
+                },
+                "submitDate": {
+                    "type": "string",
+                    "description": "The date the report was submitted in ISO-8601 UTC format.\n"
+                },
+                "approvalStatus": {
+                    "type": "object",
+                    "description": "Approval status",
+                    "$ref": "#/definitions/ApprovalStatus"
+                },
+                "paymentStatus": {
+                    "type": "object",
+                    "description": "Payment status",
+                    "$ref": "#/definitions/PaymentStatus"
+                },
+                "approver": {
+                    "type": "object",
+                    "description": "Approver for whom the report is pending approval. Only relevant if the approvalStatus.statusName is Pending Approval.",
+                    "$ref": "#/definitions/Approver"
+                },
+                "workflowAction": {
+                    "type": "object",
+                    "description": "Allowed workflow actions (submit, approve, reject)",
+                    "$ref": "#/definitions/Link"
+                },
+                "expenses": {
+                    "type": "object",
+                    "description": "Expense line items in the report.",
+                    "$ref": "#/definitions/ExpensesLink"
+                },
+                "orgUnits": {
+                    "type": "array",
+                    "description": "Array of org units",
+                    "items": {
+                        "type": "string",
+                        "maxItems": 10
+                    }
+                },
+                "customFields": {
+                    "type": "array",
+                    "description": "Array of custom fields",
+                    "items": {
+                        "$ref": "#/definitions/CustomField",
+                        "maxItems": 20
+                    }
+                }
+            }
+        },
+        "WorkflowStatus": {
+            "type": "object",
+            "required": [
+                "approvalStatus"
+            ],
+            "properties": {
+                "submitDate": {
+                    "type": "string",
+                    "description": "The date the report was submitted in ISO-8601 UTC format.\n"
+                },
+                "approvalStatus": {
+                    "type": "object",
+                    "description": "Approval status",
+                    "$ref": "#/definitions/ApprovalStatus"
+                },
+                "paymentStatus": {
+                    "type": "object",
+                    "description": "Payment status",
+                    "$ref": "#/definitions/PaymentStatus"
+                },
+                "approver": {
+                    "type": "object",
+                    "description": "Approver for whom the report is pending approval. Only relevant if the approvalStatus.statusName is Pending Approval.",
+                    "$ref": "#/definitions/Approver"
+                }
+            }
+        },
+        "ApprovalStatus": {
+            "type": "object",
+            "required": [
+                "statusCode",
+                "statusName"
+            ],
+            "properties": {
+                "statusCode": {
+                    "type": "string",
+                    "enum": [
+                        "A_NOTF",
+                        "A_RESU",
+                        "A_PEND",
+                        "A_APPR"
+                    ]
+                },
+                "statusName": {
+                    "type": "string",
+                    "enum": [
+                        "Not filed",
+                        "Resubmit",
+                        "Pending Approval",
+                        "Approved"
+                    ]
+                }
+            }
+        },
+        "PaymentStatus": {
+            "type": "object",
+            "required": [
+                "statusCode",
+                "statusName"
+            ],
+            "properties": {
+                "statusCode": {
+                    "type": "string",
+                    "enum": [
+                        "P_NOTP",
+                        "P_PEND",
+                        "P_PAID"
+                    ]
+                },
+                "statusName": {
+                    "type": "string",
+                    "enum": [
+                        "Not paid",
+                        "Pending payment",
+                        "Paid"
+                    ]
+                }
+            }
+        },
+        "ApprovalInfo": {
+            "type": "object",
+            "required": [
+                "action"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "description": "Approve or Reject.",
+                    "enum": [
+                        "APPROVE",
+                        "SEND_BACK"
+                    ]
+                },
+                "comment": {
+                    "type": "string",
+                    "description": "Optional comment by the approver. Required if rejecting the report."
+                },
+                "approvers": {
+                    "type": "array",
+                    "description": "Optionally specify an array of approvers to route the report to. This is in the case of dynamic workflow.\n",
+                    "items": {
+                        "$ref": "#/definitions/Approver"
+                    }
+                }
+            }
+        },
+        "Approver": {
+            "type": "object",
+            "required": [
+                "name",
+                "loginid"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the approver."
+                },
+                "loginid": {
+                    "type": "string",
+                    "description": "loginid of the approver."
+                },
+                "href": {
+                    "type": "string",
+                    "description": "URL to approver-https://{host}/userprofile/v4/users/{userid}\n"
+                }
+            }
+        },
+        "ExpensesLink": {
+            "type": "object",
+            "required": [
+                "href"
+            ],
+            "properties": {
+                "href": {
+                    "type": "string",
+                    "description": "Link to expenses-https://{host}/expense/v4/reports/{reportId}/expenses\n"
+                }
+            }
+        },
+        "Expense": {
+            "type": "object",
+            "required": [
+                "expenseType",
+                "transactionAmount",
+                "currencyCode",
+                "transactionDate"
+            ],
+            "properties": {
+                "href": {
+                    "type": "string",
+                    "description": "URL to self-https://{host}/users/{userid}/reports/{reportId}/expenses/{expenseId} \n"
+                },
+                "expenseType": {
+                    "type": "string",
+                    "description": "Expense type."
+                },
+                "transactionAmount": {
+                    "type": "number",
+                    "description": "The requested amount of the expense in the transaction currency."
+                },
+                "currencyCode": {
+                    "type": "string",
+                    "description": "ISO 4217 currency code of the transaction currency."
+                },
+                "transactionDate": {
+                    "type": "string",
+                    "description": "Transaction date in ISO-8601 UTC format."
+                },
+                "orgUnits": {
+                    "type": "array",
+                    "description": "Array of org units",
+                    "items": {
+                        "type": "string",
+                        "maxItems": 20
+                    }
+                },
+                "customFields": {
+                    "type": "array",
+                    "description": "Array of custom fields",
+                    "items": {
+                        "$ref": "#/definitions/CustomField",
+                        "maxItems": 40
+                    }
+                }
+            }
+        },
+        "CustomField": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "Type of custom field.",
+                    "enum": [
+                        "TEXT",
+                        "NUMBER",
+                        "DATE",
+                        "MLIST"
+                    ]
+                },
+                "value": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string",
+                    "description": "in case of a list or connected list the custom field will have a code"
+                }
+            }
+        },
+        "Link": {
+            "type": "object",
+            "required": [
+                "href",
+                "rel",
+                "method"
+            ],
+            "properties": {
+                "href": {
+                    "type": "string",
+                    "description": "Fully qualified URL of the link."
+                },
+                "rel": {
+                    "type": "string",
+                    "description": "Relationship to the current resource"
+                },
+                "method": {
+                    "type": "string",
+                    "description": "HTTP method in upper case - GET, PUT, POST, DELETE, OPTION"
+                }
+            }
+        }
+    }
+}

@@ -17,6 +17,11 @@ const
 	app.use(express.static(__dirname + '/static'));
 	app.use(express.static(__dirname + '/bower_components'));
 
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 let
 	config = {
@@ -210,6 +215,7 @@ const
 
     let router = express.Router();
     app.use('/', router);
+
 
     // Routes
     require('./lib/concur_home.js')(context, app);
