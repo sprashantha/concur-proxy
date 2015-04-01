@@ -1,0 +1,324 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v4",
+        "title": "Imaging API.",
+        "description": "This set of APIs deals with retrieving, uploading, and deleting images. Images can be receipt images or invoice images\n"
+    },
+    "host": "api.concur.com",
+    "basePath": "/imaging/v4",
+    "paths": {
+        "/links": {
+            "get": {
+                "tags": [
+                    "root"
+                ],
+                "operationId": "getImagingLinks",
+                "description": "Gets all the top-level API endpoints for imaging.\n",
+                "responses": {
+                    "200": {
+                        "description": "An array of API endpoint links. All the API endpoints are listed here.\n",
+                        "schema": {
+                            "title": "ArrayOfLinks",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Link"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/images": {
+            "post": {
+                "tags": [
+                    "images"
+                ],
+                "operationId": "postImage",
+                "description": "Upload a new image.",
+                "consumes": [
+                    "application/pdf",
+                    "image/jpg",
+                    "image/jpeg",
+                    "image/png"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "imageName",
+                        "in": "query",
+                        "description": "User supplied name of the image. This parameter should be URLEncoded and should consist of UTF-8 charchaters.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ocr",
+                        "in": "query",
+                        "description": "Boolean flag to indicate if the image needs to be OCRed. Absence of the flag indicates false.",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "Content-Length",
+                        "in": "header",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Resource created. Response contains metadata about the newly uploaded image.",
+                        "schema": {
+                            "title": "ImageInfo",
+                            "type": "object",
+                            "$ref": "#/definitions/ImageInfo"
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "URL to the image"
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "Accepted. Useful when the image needs to be processed in a queue such as OCR processing.",
+                        "schema": {
+                            "title": "ImageInfo",
+                            "type": "object",
+                            "$ref": "#/definitions/ImageInfo"
+                        }
+                    }
+                }
+            }
+        },
+        "/images/{imageId}": {
+            "put": {
+                "tags": [
+                    "images"
+                ],
+                "operationId": "putImage",
+                "description": "Uploads an image with a given guid. This should be an idempotent operation.",
+                "consumes": [
+                    "application/pdf",
+                    "image/jpg",
+                    "image/jpeg",
+                    "image/png"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "imageId",
+                        "in": "path",
+                        "description": "Unique identifier of the image.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "imageName",
+                        "in": "query",
+                        "description": "User supplied name of the image. This parameter should be URLEncoded and should consist of UTF-8 charchaters.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ocr",
+                        "in": "query",
+                        "description": "Boolean flag to indicate if the image needs to be OCRed. Absence of the flag indicates false.",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "Content-Length",
+                        "in": "header",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "If-Match",
+                        "in": "header",
+                        "description": "ETag value for optimistic locking.",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Resource created. Response contains metadata about the newly uploaded image.",
+                        "schema": {
+                            "title": "ImageInfo",
+                            "type": "object",
+                            "$ref": "#/definitions/ImageInfo"
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "URL of the Image."
+                            }
+                        }
+                    },
+                    "412": {
+                        "description": "Precondition failed for replacing the image because the ETag header does not match the server computed ETag value."
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "images"
+                ],
+                "operationId": "getImage",
+                "description": "Gets an image based on the imageId\n",
+                "produces": [
+                    "application/pdf",
+                    "image/jpg",
+                    "image/jpeg",
+                    "image/png",
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "imageId",
+                        "in": "path",
+                        "description": "guid identifying the Image",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "imageName",
+                        "in": "query",
+                        "description": "Optional consumer supplied image name. The parameter should be Urlencoded.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "Accept",
+                        "in": "header",
+                        "description": "accept header of application/pdf, image/jpg, image/jpeg, image/png, application/json",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv"
+                    },
+                    {
+                        "name": "if-none-match",
+                        "in": "header",
+                        "description": "Value of Etag if one is available. This enables retrieval of cached resource.",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Accept Http header determines the type of response. The response header contains the Vary parameter. If the accept header is application/json then the ImageInfo object is returned, else the Image binary is returned in the body.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/ImageInfo"
+                        },
+                        "headers": {
+                            "Etag": {
+                                "type": "string",
+                                "description": "Computed Etag for caching."
+                            },
+                            "Vary": {
+                                "type": "array",
+                                "description": "Accept, Accept-Encoding vary headers to enable reliable caching as well as to return the appropriate response based on the Accept header.",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "collectionFormat": "csv"
+                            },
+                            "Content-Type": {
+                                "type": "string",
+                                "description": "application/pdf, image/jpeg, image/jpg, image/png, application/json"
+                            }
+                        }
+                    },
+                    "304": {
+                        "description": "Resource not modified. Ok to retrieve a cached resource."
+                    },
+                    "404": {
+                        "description": "Resource not found."
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "Link": {
+            "type": "object",
+            "required": [
+                "href"
+            ],
+            "properties": {
+                "href": {
+                    "type": "string",
+                    "description": "Url of the link."
+                },
+                "rel": {
+                    "type": "string",
+                    "description": "What the link is related to"
+                },
+                "method": {
+                    "type": "string",
+                    "description": "The allowed methods."
+                }
+            }
+        },
+        "ImageInfo": {
+            "type": "object",
+            "required": [
+                "imageId",
+                "imageLink"
+            ],
+            "properties": {
+                "imageId": {
+                    "type": "string",
+                    "description": "guid identifying the image."
+                },
+                "imageName": {
+                    "type": "string",
+                    "description": "User supplied name of the image."
+                },
+                "lastModifiedDate": {
+                    "type": "string",
+                    "description": "Last modified date in ISO-8601 format."
+                },
+                "imageSource": {
+                    "type": "string",
+                    "description": "Image source computed from the user-agent when the image was uploaded.",
+                    "enum": [
+                        "Mobile",
+                        "Web",
+                        "Email",
+                        "Fax",
+                        "EReceipt"
+                    ]
+                },
+                "ocrStatus": {
+                    "type": "string",
+                    "description": "Status of the progress of OCR.",
+                    "enum": [
+                        "Processing",
+                        "Completed",
+                        "Cancelled"
+                    ]
+                },
+                "imageLink": {
+                    "type": "object",
+                    "schema": {
+                        "$ref": "#/definitions/Link"
+                    }
+                },
+                "thumbnailLink": {
+                    "type": "object",
+                    "schema": {
+                        "$ref": "#/definitions/Link"
+                    }
+                }
+            }
+        }
+    }
+}
