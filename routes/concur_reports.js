@@ -12,7 +12,7 @@ const
 	
 module.exports = function(context, app, router) {
     // Approvals api
-    router.get('/concur/api/reports', function (req, res) {
+    router.get('users/:userId/reports', function (req, res) {
         var access_token = util.extractToken(req, res);
         let options = {
             method: 'GET',
@@ -35,7 +35,7 @@ module.exports = function(context, app, router) {
         });
     });
 
-    router.route('/concur/api/reports/:reportId')
+    router.route('users/:userId/reports/:reportId')
         .get(function (req, res) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;

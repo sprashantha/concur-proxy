@@ -2,6 +2,7 @@
 const
     nconf = require('nconf'),
 	express = require('express'),
+    multer  = require('multer'),
     async = require('async'),
     bodyParser = require('body-parser'),
     logger = require('./lib/logger.js'),
@@ -12,6 +13,8 @@ app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
+
+app.use(multer({dest: './uploads/'}));
 
     // parse application/x-www-form-urlencoded
     app.use(bodyParser.urlencoded({ extended: false }));
@@ -226,6 +229,7 @@ const
     require('./routes/concur_trips.js')(context, app, router);
     require('./routes/concur_reports.js')(context, app, router);
     require('./routes/concur_approvals.js')(context, app, router);
+    require('./routes/concur_imaging.js')(context, app, router);
 
 
 	

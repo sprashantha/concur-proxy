@@ -1,0 +1,11 @@
+curl -X POST  -H "Content-Type: multipart/form-data" --form fileName=@/Users/prashantha/Desktop/ObjectId-Table.png  http://localhost:3000/imaging/v4/images
+
+curl -X PUT  -H "Content-Type: multipart/form-data" --form fileName=@/Users/prashantha/Desktop/Alligator.jpg  http://localhost:3000/imaging/v4/images/alligator
+
+curl -X DELETE  http://localhost:3000/imaging/v4/images/alligator
+
+curl -X GET http://localhost:3000/imaging/v4/images
+
+curl -X GET http://localhost:3000/imaging/v4/images/alligator
+
+curl -O http://localhost:3000/imaging/v4/images/alligator

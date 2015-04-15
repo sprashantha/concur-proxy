@@ -20,6 +20,10 @@
     "mongodb": "~1.4.19",
     "json2xml": "~0.1.1",
     "xml2json": "~0.5.1",
-    "aws-sdk": "~2.0.29"
+    "aws-sdk": "~2.0.29",
+    "uuid-lib": "0.0.6",
+    "node-uuid": "~1.4.3",
+    "formidable": "~1.0.17",
+    "multer": "~0.1.8"
   }
 }
