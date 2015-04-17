@@ -35,6 +35,10 @@ app.config(function($routeProvider, $httpProvider){
             templateUrl: 'approvalDetails.html',
             controller: 'approvalDetailsController'
         })
+        .when('/imaging', {
+            templateUrl: 'images.html',
+            controller: 'imagesController'
+        })
 
 });
 

@@ -1,0 +1,40 @@
+
+<div>
+    <nav class="navbar">
+        <div class="container">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#home"><i class="fa fa-comment"></i> Home</a></li>
+                <li><a href="#trips"><i class="fa fa-comment"></i> Trips</a></li>
+                <li><a href="#expenses"><i class="fa fa-comment"></i> Expenses</a></li>
+                <li><a href="#approvals"><i class="fa fa-comment"></i> Approvals</a></li>
+                <li><a href="#logout"><i class="fa fa-comment"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div ng-hide="images">
+        <img src="spiffygif_30x30.gif">
+    </div>
+
+      <h2 ng-show="images.Items.length">Images ({{images.Items.length}})</h2>
+      <table ng-show="images.Items.length">
+          <thead>
+          <tr>
+              <th>Report Name</th>
+              <th>Status</th>
+              <th>Payment Status</th>
+              <th>Report Date</th>
+              <th>Requested Amount</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr ng-repeat="r in reports.Items">
+              <td>{{ r.Name }}</td>
+              <td>{{ r.ApprovalStatusName }}</td>
+              <td>{{ r.PaymentStatusName }}</td>
+              <td>{{ r.CreateDate }}</td>
+              <td>{{ r.Total | currency }}</td>
+          </tr>
+          </tbody>
+      </table>
+  </div>
