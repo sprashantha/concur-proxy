@@ -1,11 +1,16 @@
-curl -X POST  -H "Content-Type: multipart/form-data" --form fileName=@/Users/prashantha/Desktop/ObjectId-Table.png  http://localhost:3000/imaging/v4/images
+curl -X POST  -H "Content-Type: multipart/form-data" --form fileName=@/Users/prashantha/Desktop/ObjectId-Table.png  http://localhost:3000/imaging/v4/images -v
 
-curl -X PUT  -H "Content-Type: multipart/form-data" --form fileName=@/Users/prashantha/Desktop/Alligator.jpg  http://localhost:3000/imaging/v4/images/alligator
+curl -X PUT  -H "Content-Type: multipart/form-data" --form fileName=@/Users/prashantha/Desktop/Alligator.jpg  http://localhost:3000/imaging/v4/images/alligator -v
 
-curl -X DELETE  http://localhost:3000/imaging/v4/images/alligator
+curl -X DELETE  http://localhost:3000/imaging/v4/images/alligator -v
 
-curl -X GET http://localhost:3000/imaging/v4/images
+curl -X GET http://localhost:3000/imaging/v4/images -v
 
-curl -X GET http://localhost:3000/imaging/v4/images/alligator
+curl -X GET http://localhost:3000/imaging/v4/images/alligator -v
 
-curl -O http://localhost:3000/imaging/v4/images/alligator
+curl -X GET -H "Accept:application/json" http://localhost:3000/imaging/v4/images/facebook -v
+
+curl -X GET -H "if-none-match: 07853d003da44791fc84fa8e46be20f9" http://localhost:3000/imaging/v4/images/facebook -v
+
+curl -O http://localhost:3000/imaging/v4/images/alligator -v
+

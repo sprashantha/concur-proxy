@@ -12,6 +12,7 @@ const
     uuid = require('node-uuid'),
     urlencode = require('urlencode'),
     fs = require('fs'),
+    Readable = require('stream').Readable,
     AWS = require('aws-sdk');
 
 	
@@ -26,7 +27,7 @@ module.exports = function(context, app, router) {
 
             let links = [];
             links[0] = {href: "imaging/v4/images", rel: "images", methods: "GET, POST"};
-            links[1] = {href: "imaging/v4/images/{imageId}", rel: "image", methods: "GET, PUT, DELETE"};
+            links[1] = {href: "imaging/v4/images/{imageId}", rel: "receipts,invoices", methods: "GET, PUT, DELETE"};
             res.status(200).send(links);
         });
 
@@ -50,7 +51,7 @@ module.exports = function(context, app, router) {
                     // ImageInfo
                     images[index] = {
                         imageId: data.Contents[index].Key,
-                        imageLink: {href: "/imaging/v4/images/" + data.Contents[index].Key, rel: "image", methods: "GET, PUT, DELETE"},
+                        imageLink: {href: "/imaging/v4/images/" + data.Contents[index].Key, rel: "receipts,invoices", methods: "GET, PUT, DELETE"},
                         lastModified: data.Contents[index].LastModified,
                         etag: data.Contents[index].ETag,
                         size: data.Contents[index].ContentLength,
@@ -102,18 +103,6 @@ module.exports = function(context, app, router) {
                         res.location("/imaging/v4/images/" + params.Key).status(201).json({status: "Created"});
                         return;
                     });
-
-
-
-//                    rstream.on('readable', function(){
-//                        console.log("There is data to read");
-//                    })
-//                    rstream.on('data', function(chunk){
-//                        console.log('got %d bytes of data', chunk.length);
-//                    })
-//                    rstream.on('end', function(){
-//                        console.log("No more data");
-//                    })
                 }
             }
             else{
@@ -137,62 +126,84 @@ module.exports = function(context, app, router) {
 
             let acceptJson = (req.get('Accept') == "application/json");
             let ifNoneMatch = req.get('if-none-match');
+            console.log("if-none-match: " + ifNoneMatch);
             let params = {Bucket: 'concur-imaging', Key: imageId, IfNoneMatch: ifNoneMatch};
 
+            if (acceptJson){
+                console.log("Accept json");
+                context.s3.getObject(params, function(err, data){
+                    if (err) {
+                        if (err.code == "NoSuchKey"){
+                            res.status(404).json({error: "not_found", reason: err.code});
+                        }
+                        else{
+                            res.status(502).json({error: "bad_gateway", reason: err.code});
+                        }
+                        return;
+                    }
 
-            res.status(200);
-            context.s3.getObject(params).createReadStream().pipe(res);
+                    let imageInfo = {
+                        imageId: params.Key,
+                        imageLink: {href: "/imaging/v4/images/" + params.Key, rel: "receipts,invoices", methods: "GET, PUT, DELETE"},
+                        lastModified: data.LastModified,
+                        size: data.ContentLength,
+                        contentType: data.ContentType,
+                        etag: data.ETag,
+                        ocrStatus: "Unknown",
+                        imageSource: "Unknown"
+                    };
+                    res.set('Content-Type', 'application/json');
+                    res.vary("Accept, Accept-Encoding")
+                    res.status(200).json(imageInfo);
+                    return;
+                });
+            }
+            else{
+                let rs = new Readable();
+                let httpStatusCode = 200;
+                let httpHeaders = null;
+                let awsRequest = context.s3.getObject(params);
+                let readStream = awsRequest.createReadStream().on('error', function(){
+                    console.log("Stream error");
+                });
+                awsRequest.on('error', function(err, resp){
+                    console.log("Error: ");
+                    if (err) {
+                        console.log("err.code: " + err.code);
+                    }
+                }).
+                on('httpError', function(err, resp){
+                    console.log("httpError: ");
+                    if (err) {
+                        console.log("err.code: " + err.code);
+                    }
+                }).
+                on('httpHeaders', function(statusCode, headers, resp){
+                    console.log("httpHeaders:");
+                    console.log("statusCode:" + statusCode);
+                    console.log("headers:");
+                    console.log(headers);
+                    httpStatusCode = statusCode;
+                    httpHeaders = headers;
+                }).
+                on('complete', function(resp){
+                    console.log("complete");
+                    if (httpStatusCode != 200){
+                        console.log(httpStatusCode);
+                        res.status(httpStatusCode).send("");
+                    }
+                    else{
+                        console.log("httpStatusCode:" + httpStatusCode);
+                        res.status(200);
+                        res.set("Content-Type", httpHeaders["content-type"]);
+                        res.set("Content-Length", httpHeaders["content-length"]);
+                        res.set("ETag", httpHeaders["etag"]);
+                        res.set("Last-Modified", httpHeaders["last-modified"]);
+                        readStream.pipe(res);
+                    }
+                }).send();
 
-//            let awsRequest = context.s3.getObject(params);
-//            awsRequest.on('httpHeaders', function(statusCode, headers, resp){
-//                console.log("AWS.Request httpHeaders event");
-//                if (statusCode == 304){
-//                    console.log("304 status code");
-//                    res.status(304).json("status: Resource not modified");
-//                    return;
-//                }
-//            }).
-//            on('error', function(err, resp){
-//                console.log("AWS.Request error event");
-//                if (err){
-//                    res.status(502).json({error: "bad_gateway", reason: err.code});
-//                    return;
-//                }
-//                else{
-//                    res.status(502).json({error: "bad_gateway", reason: "Missing error object"});
-//                    return;
-//                }
-//
-//            }).
-//            on('success', function(resp){
-//                console.log("AWS.Request success event");
-//                if (acceptJson){
-//                    console.log("Accept json");
-//                    let imageInfo = {
-//                        imageId: params.Key,
-//                        imageLink: {href: "/imaging/v4/images/" + params.Key, rel: "image", methods: "GET, PUT, DELETE"},
-//                        lastModified: resp.data.LastModified,
-//                        size: resp.data.ContentLength,
-//                        contentType: resp.data.ContentType,
-//                        etag: resp.data.Etag,
-//                        ocrStatus: "Unknown",
-//                        imageSource: "Unknown"
-//                    };
-//                    res.set('Content-Type', 'application/json');
-//                    res.vary("Accept, Accept-Encoding")
-//                    res.status(200).json(imageInfo);
-//                    return;
-//                }
-//                else{
-//                    console.log("Binary download");
-//                    res.set('Content-Type', resp.data.ContentType);
-//                    res.vary("Accept, Accept-Encoding");
-//                    res.status(200);
-//                   // resp.createReadStream().pipe(res);
-//                    res.send(resp.data);
-//                    return;
-//                }
-//            }).send();
+            }
         })
         .put(function (req, res) {
             // let access_token = utility.extractToken(req, res);
