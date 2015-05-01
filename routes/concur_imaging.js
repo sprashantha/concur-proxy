@@ -37,12 +37,13 @@ module.exports = function(context, app, router) {
            // Validate the token.
 
             // Get all the images from the concur-imaging bucket by calling listObjects().
+            let meta = {";concur.correlation_id": req.requestId};
             context.s3.listObjects({Bucket: 'concur-imaging'}, function(err, data) {
                 if (err) {
                     res.status(502).json({error: "bad_gateway", reason: err.code});
                     return;
                 }
-                console.log("Number of objects: " + data.Contents.length);
+                logger.debug("Number of objects: " + data.Contents.length, meta);
                 let images = [];
                 let length = data.Contents.length;
                 length = length < 1000 ? length: 1000;
@@ -69,19 +70,20 @@ module.exports = function(context, app, router) {
             // var access_token = utility.extractToken(req, res);
             // Validate the token.
 
+            let meta = {";concur.correlation_id": req.requestId};
             let body = req.body;
             let files = req.files;
-            console.log("Body: ");
-            console.log(body);
-            console.log("Files:");
-            console.log(files);
+            logger.debug("Body: ", meta);
+            logger.debug(body, meta);
+            logger.debug("Files:", meta);
+            logger.debug(files, meta);
             if (files){
                 // Get the file name.
                 let path = files.fileName.path;
                 if (path) {
-                    console.log("path: " + path);
+                    logger.debug("path: " + path, meta);
                     fs.exists(path, function(exists){
-                       console.log("File exists: " + exists);
+                       logger.debug("File exists: " + exists, meta);
                     });
                     // Create a readable stream.
                     let rstream = fs.createReadStream(path);
@@ -117,56 +119,63 @@ module.exports = function(context, app, router) {
             // let access_token = utility.extractToken(req, res);
             // Validate the token.
 
+            let meta = {";concur.correlation_id": req.requestId};
             let imageId = req.params.imageId;
             if (imageId) {
                 imageId = urlencode.decode(imageId);
             }
 
-            console.log("imageId: " + imageId);
+            logger.debug("imageId: " + imageId, meta);
 
             let acceptJson = (req.get('Accept') == "application/json");
             let ifNoneMatch = req.get('if-none-match');
-            console.log("acceptJson: " + acceptJson);
-            console.log("if-none-match: " + ifNoneMatch);
+            logger.debug("acceptJson: " + acceptJson, meta);
+            logger.debug("if-none-match: " + ifNoneMatch, meta);
             let params = {Bucket: 'concur-imaging', Key: imageId, IfNoneMatch: ifNoneMatch};
-
-            let httpStatusCode = 200;
-            let httpHeaders = null;
             let awsRequest = context.s3.getObject(params);
-            let readStream = awsRequest.createReadStream().on('error', function(){
-                console.log("Stream error");
-            });
-            awsRequest.on('error', function(err, resp){
-                console.log("Error: ");
-                if (err) {
-                    console.log("err.code: " + err.code);
-                }
-            }).
-            on('httpError', function(err, resp){
-                console.log("httpError: ");
-                if (err) {
-                    console.log("err.code: " + err.code);
-                }
-            }).
-            on('httpHeaders', function(statusCode, headers, resp){
-                console.log("httpHeaders:");
-                console.log("statusCode:" + statusCode);
-                console.log("headers:");
-                console.log(headers);
-                httpStatusCode = statusCode;
-                httpHeaders = headers;
-            }).
-            on('complete', function(resp){
-                console.log("complete");
-                res.status(httpStatusCode);
-                if (httpStatusCode != 200){
-                    console.log(httpStatusCode);
-                    res.status(httpStatusCode).send("");
-                }
-                else{
-                    console.log("httpStatusCode:" + httpStatusCode);
+            if (acceptJson){
+              // If the Accept header is application/json then generate a json response for the metadata with the
+              // appropriate http headers.
+              // I am using an eventing approach on the AWS.Request object. Probably overkill to do this. Might be
+              // simpler to just use a callback and extract all the bits from the response from S3.
+              let httpStatusCode = 200;
+              let httpHeaders = null;
+              let errorCode = 502;
+              let errorResp = false;
+              awsRequest.on('error', function(err, resp){
+                    logger.debug("Error: ");
+                    if (err) {
+                        logger.debug("err.code: " + err.code, meta);
+                        errorCode = err.code;
+                    }
+                    errorResp = true;
+                }).
+                on('httpHeaders', function(statusCode, headers, resp){
+                    logger.debug("httpHeaders:", meta);
+                    logger.debug("statusCode:" + statusCode, meta);
+                    logger.debug("headers:", meta);
+                    logger.debug(headers, meta);
+                    httpStatusCode = statusCode;
+                    httpHeaders = headers;
+                }).
+                on('httpError', function(err, resp){
+                    logger.debug("httpError: ");
+                    if (err) {
+                        logger.debug("err.code: " + err.code, meta);
+                        errorCode = err.code;
+                    }
+                }).
+                on('success', function(resp){
+                    logger.debug("success");
+                }).
+                on('complete', function(resp){
+                    logger.debug("complete");
                     res.status(httpStatusCode);
-                    if (acceptJson){
+                    if (httpStatusCode != 200 || errorResp == true){
+                        logger.debug("httpStatusCode:" + httpStatusCode, meta);
+                        res.status(httpStatusCode).send(errorCode);
+                    }
+                    else {
                         let imageInfo = {
                             imageId: params.Key,
                             imageLink: {href: "/imaging/v4/images/" + params.Key, rel: "receipts,invoices", methods: "GET, PUT, DELETE"},
@@ -174,48 +183,56 @@ module.exports = function(context, app, router) {
                             size: httpHeaders["content-length"],
                             contentType: httpHeaders["content-type"],
                             etag: httpHeaders["etag"],
-                            ocrStatus: "Unknown",
                             imageSource: "Unknown"
                         };
+                        logger.debug("imageInfo:", meta);
+                        logger.debug(imageInfo, meta);
                         res.set('Content-Type', 'application/json');
                         res.vary("Accept, Accept-Encoding")
                         res.json(imageInfo);
                     }
-                    else{
-                        res.set("Content-Type", httpHeaders["content-type"]);
-                        res.set("Content-Length", httpHeaders["content-length"]);
-                        res.set("ETag", httpHeaders["etag"]);
-                        res.set("Last-Modified", httpHeaders["last-modified"]);
-                        readStream.pipe(res);
+                }).send();
+            }
+            else{
+                // Default behavior when the Accept header is not application/json. Download the
+                // image itself unless S3 returns 304 or 404.
+                let readStream = awsRequest.createReadStream();
+                readStream.on('error', function(err, resp){
+                    if (err) {
+                        logger.debug("Stream error:" + err.statusCode);
+                        res.status(502).send("Error:", err.statusCode);
                     }
-                }
-            }).send();
-
-
+                    else{
+                        logger.debug("Unknown stream error");
+                        res.status(502).send("Error: Unknown");
+                    }
+                }).pipe(res);
+            }
         })
         .put(function (req, res) {
             // let access_token = utility.extractToken(req, res);
             // Validate the token.
 
+            let meta = {";concur.correlation_id": req.requestId};
             let imageId = req.params.imageId;
             if (imageId) {
                 imageId = urlencode.decode(imageId);
-                console.log("imageId: " + imageId);
+                logger.debug("imageId: " + imageId, meta);
             }
 
             let body = req.body;
             let files = req.files;
-            console.log("Body: ");
-            console.log(body);
-            console.log("Files:");
-            console.log(files);
+            logger.debug("Body: ", meta);
+            logger.debug(body, meta);
+            logger.debug("Files:", meta);
+            logger.debug(files, meta);
             if (files){
                 // Get the file name.
                 let path = files.fileName.path;
                 if (path) {
-                    console.log("path: " + path);
+                    logger.debug("path: " + path);
                     fs.exists(path, function(exists){
-                        console.log("File exists: " + exists);
+                        logger.debug("File exists: " + exists, meta);
                     });
                     // Create a readable stream.
                     let rstream = fs.createReadStream(path);
@@ -247,10 +264,11 @@ module.exports = function(context, app, router) {
             // let access_token = utility.extractToken(req, res);
             // Validate the token.
 
+            let meta = {";concur.correlation_id": req.requestId};
             let imageId = req.params.imageId;
             if (imageId) {
                 imageId = urlencode.decode(imageId);
-                console.log("imageId: " + imageId);
+                logger.debug("imageId: " + imageId, meta);
             }
 
             // Put the image into the concur-imaging bucket by calling putObject(). Use the imageId as the key.

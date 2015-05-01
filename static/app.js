@@ -35,9 +35,13 @@ app.config(function($routeProvider, $httpProvider){
             templateUrl: 'approvalDetails.html',
             controller: 'approvalDetailsController'
         })
-        .when('/imaging', {
+        .when('/images', {
             templateUrl: 'images.html',
             controller: 'imagesController'
+        })
+        .when('/images/:imageId', {
+            templateUrl: 'imageDetails.html',
+            controller: 'imageDetailsController'
         })
 
 });
@@ -56,6 +60,15 @@ app.controller("tripsController", function($scope,$rootScope,$http){
 app.controller("expenseController", function($scope,$rootScope,$http){
     $http({method: 'GET', url: '/concur/api/reports', headers: {'authorization': $rootScope.token}})
         .success(function(response){$scope.reports = response;});
+});
+
+app.controller("imagesController", function($scope,$rootScope,$http){
+    $http({method: 'GET', url: '/imaging/v4/images', headers: {'authorization': $rootScope.token}})
+        .success(function(response){$scope.images = response;});
+});
+
+app.controller("imageDetailsController", function($scope,$rootScope,$http, $routeParams){
+    $scope.imageId = $routeParams.imageId;
 });
 
 app.controller("approvalsController", function($scope,$rootScope,$http){
@@ -83,6 +96,20 @@ app.controller("workflowController", function($scope,$rootScope, $http, $locatio
                 }
 
             });
+    }
+});
+
+app.controller("imageUploadController", function($scope,$rootScope, $http, $location){
+    $scope.approveReport = function(){
+        $scope.data = 'none';
+        $scope.add = function(){
+            var f = document.getElementById('file').files[0],
+                r = new FileReader();
+            r.onloadend = function(e){
+                $scope.data = e.target.result;
+            }
+            r.readAsBinaryString(f);
+        }
     }
 });
 

@@ -6,7 +6,13 @@ const
     async = require('async'),
     bodyParser = require('body-parser'),
     logger = require('./lib/logger.js'),
+    requestId = require('request-id/express'),
 	app = express();
+
+app.use(requestId({
+    resHeader: 'concur.correlation_id',
+    reqHeader: 'concur.correlation_id'
+}));
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");

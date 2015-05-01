@@ -16,24 +16,22 @@
         <img src="spiffygif_30x30.gif">
     </div>
 
-      <h2 ng-show="images.Items.length">Images ({{images.Items.length}})</h2>
-      <table ng-show="images.Items.length">
+      <h2 ng-show="images.length">Images ({{images.length}})</h2>
+      <table ng-show="images.length">
           <thead>
           <tr>
-              <th>Report Name</th>
-              <th>Status</th>
-              <th>Payment Status</th>
-              <th>Report Date</th>
-              <th>Requested Amount</th>
+              <th>ImageId</th>
+              <th>Image Link</th>
+              <th>Last Modified Date</th>
+              <th>ETag</th>
           </tr>
           </thead>
           <tbody>
-          <tr ng-repeat="r in reports.Items">
-              <td>{{ r.Name }}</td>
-              <td>{{ r.ApprovalStatusName }}</td>
-              <td>{{ r.PaymentStatusName }}</td>
-              <td>{{ r.CreateDate }}</td>
-              <td>{{ r.Total | currency }}</td>
+          <tr ng-repeat="i in images">
+              <td><a ng-href="#/images/{{i.imageId}}">{{ i.imageId }}</a></td>
+              <td>{{ i.imageLink.href }}</td>
+              <td>{{ i.lastModified }}</td>
+              <td>{{ i.etag }}</td>
           </tr>
           </tbody>
       </table>

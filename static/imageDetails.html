@@ -6,25 +6,15 @@
                 <li><a href="#home"><i class="fa fa-comment"></i> Home</a></li>
                 <li><a href="#trips"><i class="fa fa-comment"></i> Trips</a></li>
                 <li><a href="#expenses"><i class="fa fa-comment"></i> Expenses</a></li>
-                <li><a href="#approvals"><i class="fa fa-comment"></i> Approvals</a></li>
                 <li><a href="#logout"><i class="fa fa-comment"></i> Logout</a></li>
             </ul>
         </div>
     </nav>
 
 
-    <div ng-show="loading">
-        <img src="spiffygif_30x30.gif">
-    </div>
+<div>
+      <h1>Image Id: {{imageId}} </h1>
+    <img ng-src="/imaging/v4/images/{{imageId}}" alt="Receipt Image">
+</div>
 
-
-      <h1 ng-show="imageUpload">Upload Image </h1>
-    <div ng-show="imageUpload" ng-controller="imageController">
-    <form name="imageForm"
-          ng-submit="uploadImage()" novalidate>
-          <div>
-            <p><button>Upload</button></p>
-          </div>
-        </form>
-    </div>
   </div>

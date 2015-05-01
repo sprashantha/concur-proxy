@@ -24,6 +24,7 @@
     "uuid-lib": "0.0.6",
     "node-uuid": "~1.4.3",
     "formidable": "~1.0.17",
-    "multer": "~0.1.8"
+    "multer": "~0.1.8",
+    "request-id": "~0.9.0"
   }
 }
