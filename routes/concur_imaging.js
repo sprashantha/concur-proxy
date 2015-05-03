@@ -62,6 +62,9 @@ module.exports = function(context, app, router) {
                     }
                 }
 
+                logger.debug("Images:", meta);
+                logger.debug(images, meta);
+
                 res.status(200).send(images);
                 return;
             });
@@ -188,25 +191,53 @@ module.exports = function(context, app, router) {
                         logger.debug("imageInfo:", meta);
                         logger.debug(imageInfo, meta);
                         res.set('Content-Type', 'application/json');
-                        res.vary("Accept, Accept-Encoding")
+                        res.vary("Accept, Accept-Encoding");
                         res.json(imageInfo);
                     }
                 }).send();
             }
             else{
+                // Set cache-control headers.
+                res.set('Cache-Control', 'max-age=30, must-revalidate');
+                res.vary("Accept, Accept-Encoding");
+
+                awsRequest.
+                on('httpHeaders', function(statusCode, headers, resp){
+                    logger.debug("httpHeaders:", meta);
+                    logger.debug(headers, meta);
+                    if (headers["etag"]){
+                        res.set('ETag', headers["etag"]);
+                    }
+                    res.status(statusCode);
+                }).
+                on('httpData', function(chunk) {
+                     if (chunk) {
+                         res.write(chunk);
+                     }
+
+                }).
+                on('httpDone', function() {
+                        logger.debug("httpDone:", meta);
+                        res.end();
+                }).
+                on('complete', function() {
+                    logger.debug("complete:", meta);
+                    res.end();
+                }).send();
+
                 // Default behavior when the Accept header is not application/json. Download the
                 // image itself unless S3 returns 304 or 404.
-                let readStream = awsRequest.createReadStream();
-                readStream.on('error', function(err, resp){
-                    if (err) {
-                        logger.debug("Stream error:" + err.statusCode);
-                        res.status(502).send("Error:", err.statusCode);
-                    }
-                    else{
-                        logger.debug("Unknown stream error");
-                        res.status(502).send("Error: Unknown");
-                    }
-                }).pipe(res);
+//                let readStream = awsRequest.createReadStream();
+//                readStream.on('error', function(err, resp){
+//                    if (err) {
+//                        logger.debug("Stream error:" + err.statusCode);
+//                        res.status(502).send("Error:", err.statusCode);
+//                    }
+//                    else{
+//                        logger.debug("Unknown stream error");
+//                        res.status(502).send("Error: Unknown");
+//                    }
+//                }).pipe(res);
             }
         })
         .put(function (req, res) {
