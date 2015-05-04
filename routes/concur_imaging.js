@@ -15,29 +15,33 @@ const
     Readable = require('stream').Readable,
     AWS = require('aws-sdk');
 
+const
+    users = require('../lib/models/users.js');
+
 	
 module.exports = function(context, app, router) {
     // Imaging api
     router.route('/imaging/v4/links')
         .get(function (req, res) {
-            // var access_token = utility.extractToken(req, res);
-
-            // Validate the token.
+            let meta = {";concur.correlation_id": req.requestId};
             // Return the list of links.
+            logger.debug("/imaging/v4/links", meta);
 
             let links = [];
-            links[0] = {href: "imaging/v4/images", rel: "images", methods: "GET, POST"};
+            links[0] = {href: "imaging/v4/images", rel: "receipts,invoices", methods: "GET, POST"};
             links[1] = {href: "imaging/v4/images/{imageId}", rel: "receipts,invoices", methods: "GET, PUT, DELETE"};
             res.status(200).send(links);
         });
 
     router.route('/imaging/v4/images')
         .get(function (req, res) {
-           // var access_token = utility.extractToken(req, res);
-           // Validate the token.
+           // For logging.
+           let meta = {";concur.correlation_id": req.requestId};
+
+            let ifNoneMatch = req.get('if-none-match');
+            logger.debug("if-none-match: " + ifNoneMatch, meta);
 
             // Get all the images from the concur-imaging bucket by calling listObjects().
-            let meta = {";concur.correlation_id": req.requestId};
             context.s3.listObjects({Bucket: 'concur-imaging'}, function(err, data) {
                 if (err) {
                     res.status(502).json({error: "bad_gateway", reason: err.code});
@@ -68,6 +72,7 @@ module.exports = function(context, app, router) {
                 res.status(200).send(images);
                 return;
             });
+
         })
         .post(function (req, res) {
             // var access_token = utility.extractToken(req, res);
@@ -207,6 +212,15 @@ module.exports = function(context, app, router) {
                     logger.debug(headers, meta);
                     if (headers["etag"]){
                         res.set('ETag', headers["etag"]);
+                    }
+                    if (headers["content-type"]){
+                        res.set('Content-Type', headers["content-type"]);
+                    }
+                    if (headers["content-length"]){
+                        res.set('Content-Length', headers["content-length"]);
+                    }
+                    if (headers["last-modified"]){
+                        res.set('Last-Modified', headers["last-modified"]);
                     }
                     res.status(statusCode);
                 }).

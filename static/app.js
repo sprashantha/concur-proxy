@@ -125,7 +125,7 @@ app.controller('loginController', function ($scope, $rootScope, $http, $location
     };
     $scope.login = function () {
         $http
-            .post('/concur/api/login', $scope.credentials)
+            .post('/login', $scope.credentials)
             .success(function(data){
                 var token = data.value;
                 $rootScope.token = token;
@@ -155,3 +155,4 @@ app.run(function($rootScope, $location) {
         }
     });
 });
+

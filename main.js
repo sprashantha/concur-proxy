@@ -225,8 +225,51 @@ const
 
 
     let router = express.Router();
-    app.use('/', router);
+   // app.use('/concur/api/', router);
+   // app.use('/imaging/v4/', router);
+   app.use('/', router);
 
+const
+    users = require('./lib/models/users.js'),
+    utility = require('./lib/util.js');
+
+    router.use(function authorizeRequest(req, res, next) {
+
+        logger.debug("req.url: " + req.url);
+        logger.debug("req.originalUrl: " + req.originalUrl);
+        logger.debug("req.baseUrl: " + req.baseUrl);
+        logger.debug("req.path: " + req.path);
+
+        // If you are logging in then use a different mechanism to authorize the request.
+        // Check the baseUrl.
+        if (req.url == "/login")
+        {
+           next();
+           return;
+        }
+        // Validate the access token
+        var access_token = utility.extractToken2(req, res);
+        if(access_token && access_token != '') {
+            users.validateToken(access_token, context, function (err, item) {
+                if (err) {
+                    res.json(502, {error: "bad_gateway", reason: err.code});
+                }
+                if (item) {
+                    logger.debug("validateToken item found");
+                    next();
+                }
+                else {
+                    res.status(401).end();
+                    return;
+                }
+            });
+        }
+        else{
+            res.status(401).end();
+            return;
+        }
+
+    });
 
     // Routes
     require('./lib/concur_home.js')(context, app);
