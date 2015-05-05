@@ -43,6 +43,10 @@ app.config(function($routeProvider, $httpProvider){
             templateUrl: 'imageDetails.html',
             controller: 'imageDetailsController'
         })
+        .when('/imageUpload', {
+            templateUrl: 'imageUpload.html',
+            controller: 'imageUploadController'
+        })
 
 });
 
@@ -70,6 +74,11 @@ app.controller("imagesController", function($scope,$rootScope,$http){
 app.controller("imageDetailsController", function($scope,$rootScope,$http, $routeParams){
     $scope.imageId = $routeParams.imageId;
 });
+
+app.controller("imageUploadController", function($scope,$rootScope, $http, $location){
+    $scope.imageId = $routeParams.imageId;
+});
+
 
 app.controller("approvalsController", function($scope,$rootScope,$http){
     $http({method: 'GET', url: '/concur/api/approvals', headers: {'authorization': $rootScope.token}})
@@ -99,14 +108,28 @@ app.controller("workflowController", function($scope,$rootScope, $http, $locatio
     }
 });
 
-app.controller("imageUploadController", function($scope,$rootScope, $http, $location){
-    $scope.approveReport = function(){
-        $scope.data = 'none';
+app.controller("uploadController", function($scope,$rootScope, $http, $location){
+    $scope.add = function(){
+        $scope.loading = true;
         $scope.add = function(){
+            alert("Add Called");
             var f = document.getElementById('file').files[0],
                 r = new FileReader();
             r.onloadend = function(e){
-                $scope.data = e.target.result;
+                var data = e.target.result;
+                //send you binary data via $http or $resource or do anything else with it
+                $http({method: 'POST',
+                    url: '/imaging/v4/images',
+                    headers: {'authorization': $rootScope.token},
+                    data: data})
+                    .success(function(response){
+                        if (response){
+                            alert(" Upload Status: ");
+                            $scope.loading = false;
+                            $location.path('/images');
+                        }
+
+                    });
             }
             r.readAsBinaryString(f);
         }

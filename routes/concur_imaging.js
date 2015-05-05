@@ -83,12 +83,13 @@ module.exports = function(context, app, router) {
             let files = req.files;
             logger.debug("Body: ", meta);
             logger.debug(body, meta);
-            logger.debug("Files:", meta);
+            logger.debug("files:", meta);
             logger.debug(files, meta);
-            if (files){
+            if (files && files.fileToUpload){
                 // Get the file name.
-                let path = files.fileName.path;
-                if (path) {
+                let path = files.fileToUpload.path;
+
+                if (path){
                     logger.debug("path: " + path, meta);
                     fs.exists(path, function(exists){
                        logger.debug("File exists: " + exists, meta);
@@ -109,10 +110,17 @@ module.exports = function(context, app, router) {
                         // Delete the local file.
                         fs.unlinkSync(path);
 
+                        // Pull out the http response statusCode.
+                        logger.debug("http response status code:" + this.httpResponse.statusCode);
+
                         // Response
                         res.location("/imaging/v4/images/" + params.Key).status(201).json({status: "Created"});
                         return;
                     });
+                }
+                else{
+                    res.status(502).json({error: "bad_request", reason: "Missing file path"});
+                    return;
                 }
             }
             else{
@@ -269,11 +277,12 @@ module.exports = function(context, app, router) {
             let files = req.files;
             logger.debug("Body: ", meta);
             logger.debug(body, meta);
-            logger.debug("Files:", meta);
+            logger.debug("files:", meta);
             logger.debug(files, meta);
-            if (files){
-                // Get the file name.
-                let path = files.fileName.path;
+            if (files && files.fileToUpload){
+                // Get the file path.
+                let path = files.fileToUpload.path;
+
                 if (path) {
                     logger.debug("path: " + path);
                     fs.exists(path, function(exists){
@@ -292,11 +301,19 @@ module.exports = function(context, app, router) {
                         // Delete the local file.
                         fs.unlinkSync(path);
 
+                        // Pull out the http response statusCode.
+                        logger.debug("http response status code:" + this.httpResponse.statusCode);
+
+
                         // Response
-                        res.location("/imaging/v4/images/" + params.Key).status(201).json({status: "Created"});
+                        res.location("/imaging/v4/images/" + params.Key).status(200).json({status: "Uploaded"});
                         return;
                     });
 
+                }
+                else{
+                    res.status(502).json({error: "bad_request", reason: "Missing file path"});
+                    return;
                 }
             }
             else{

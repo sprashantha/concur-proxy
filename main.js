@@ -259,13 +259,13 @@ const
                     next();
                 }
                 else {
-                    res.status(401).end();
+                    res.status(401).send("Unauthorized");
                     return;
                 }
             });
         }
         else{
-            res.status(401).end();
+            res.status(401).send("Unauthorized");
             return;
         }
 
