@@ -30,6 +30,40 @@
             }
         },
         "/images": {
+            "get": {
+                "tags": [
+                    "images"
+                ],
+                "summary": "Get recent images.",
+                "description": "Returns metadata associated with up to 1000 images.",
+                "parameters": [
+                    {
+                        "name": "concur.correlation_id",
+                        "in": "header",
+                        "description": "\"This is an optional request header parameter that will be replayed back in the response. If this is not supplied then the API will generate one and return it in the response.\"\n",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of pointers to images",
+                        "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            }
+                        },
+                        "schema": {
+                            "title": "ArrayOfImages",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ImageInfo"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "images"
@@ -47,23 +81,16 @@
                 ],
                 "parameters": [
                     {
-                        "name": "imageName",
-                        "in": "query",
-                        "description": "User supplied name of the image. This parameter should be URLEncoded and should consist of UTF-8 charchaters.",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "ocr",
-                        "in": "query",
-                        "description": "Boolean flag to indicate if the image needs to be OCRed. Absence of the flag indicates false.",
-                        "required": false,
-                        "type": "boolean"
-                    },
-                    {
                         "name": "Content-Length",
                         "in": "header",
                         "type": "integer"
+                    },
+                    {
+                        "name": "concur.correlation_id",
+                        "in": "header",
+                        "description": "This is an optional request header parameter that will be replayed back in the response. If this is not supplied then the API will generate one and return it in the response.",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -75,6 +102,10 @@
                             "$ref": "#/definitions/ImageInfo"
                         },
                         "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            },
                             "Location": {
                                 "type": "string",
                                 "description": "URL to the image"
@@ -83,6 +114,12 @@
                     },
                     "202": {
                         "description": "Accepted. Useful when the image needs to be processed in a queue such as OCR processing.",
+                        "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            }
+                        },
                         "schema": {
                             "title": "ImageInfo",
                             "type": "object",
@@ -117,20 +154,6 @@
                         "type": "string"
                     },
                     {
-                        "name": "imageName",
-                        "in": "query",
-                        "description": "User supplied name of the image. This parameter should be URLEncoded and should consist of UTF-8 charchaters.",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "ocr",
-                        "in": "query",
-                        "description": "Boolean flag to indicate if the image needs to be OCRed. Absence of the flag indicates false.",
-                        "required": false,
-                        "type": "boolean"
-                    },
-                    {
                         "name": "Content-Length",
                         "in": "header",
                         "type": "integer"
@@ -152,6 +175,10 @@
                             "$ref": "#/definitions/ImageInfo"
                         },
                         "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            },
                             "Location": {
                                 "type": "string",
                                 "description": "URL of the Image."
@@ -159,7 +186,13 @@
                         }
                     },
                     "412": {
-                        "description": "Precondition failed for replacing the image because the ETag header does not match the server computed ETag value."
+                        "description": "Precondition failed for replacing the image because the ETag header does not match the server computed ETag value.",
+                        "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            }
+                        }
                     }
                 }
             },
@@ -185,13 +218,6 @@
                         "type": "string"
                     },
                     {
-                        "name": "imageName",
-                        "in": "query",
-                        "description": "Optional consumer supplied image name. The parameter should be Urlencoded.",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
                         "name": "Accept",
                         "in": "header",
                         "description": "accept header of application/pdf, image/jpg, image/jpeg, image/png, application/json",
@@ -212,12 +238,16 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The Accept Http header determines the type of response. The response header contains the Vary parameter. If the accept header is application/json then the ImageInfo object is returned, else the Image binary is returned in the body.",
+                        "description": "Returns either metadata about the image or the image itself based on the Accept header. The response header contains the Content-Type and Vary parameter. If the accept header is application/json then an ImageInfo json object is returned, else the Image binary is returned in the body.",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/ImageInfo"
                         },
                         "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            },
                             "Etag": {
                                 "type": "string",
                                 "description": "Computed Etag for caching."
@@ -237,10 +267,56 @@
                         }
                     },
                     "304": {
-                        "description": "Resource not modified. Ok to retrieve a cached resource."
+                        "description": "Resource not modified. Ok to retrieve a cached resource.",
+                        "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Resource not found."
+                        "description": "Resource not found.",
+                        "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "images"
+                ],
+                "operationId": "deleteImage",
+                "description": "Deletes an image based on the imageId\n",
+                "parameters": [
+                    {
+                        "name": "imageId",
+                        "in": "path",
+                        "description": "guid identifying the Image",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "concur.correlation_id",
+                        "in": "header",
+                        "description": "\"This is an optional request header parameter that will be replayed back in the response. If this is not supplied then the API will generate one and return it in the response.\"\n",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Confirms that image was deleted.",
+                        "headers": {
+                            "concur.correlation_id": {
+                                "type": "string",
+                                "description": "Unique identifier for the request. If a correlationId is passed in the request the response header matches the request's correlationId. Else it is generated. The correlationId can be used in logging and troubleshooting."
+                            }
+                        }
                     }
                 }
             }
@@ -259,11 +335,11 @@
                 },
                 "rel": {
                     "type": "string",
-                    "description": "What the link is related to"
+                    "description": "(Optional) What the link is related to"
                 },
-                "method": {
+                "methods": {
                     "type": "string",
-                    "description": "The allowed methods."
+                    "description": "(Optional) The allowed methods."
                 }
             }
         },
@@ -278,18 +354,23 @@
                     "type": "string",
                     "description": "guid identifying the image."
                 },
-                "imageName": {
-                    "type": "string",
-                    "description": "User supplied name of the image."
-                },
                 "lastModifiedDate": {
                     "type": "string",
                     "description": "Last modified date in ISO-8601 format."
                 },
+                "etag": {
+                    "type": "string",
+                    "description": "Etag"
+                },
+                "size": {
+                    "type": "number",
+                    "description": "size of the image"
+                },
                 "imageSource": {
                     "type": "string",
-                    "description": "Image source computed from the user-agent when the image was uploaded.",
+                    "description": "\"Image source computed from the user-agent when the image was uploaded. One of Unknown, Mobile.\"\n",
                     "enum": [
+                        "Unknown",
                         "Mobile",
                         "Web",
                         "Email",
@@ -297,26 +378,11 @@
                         "EReceipt"
                     ]
                 },
-                "ocrStatus": {
-                    "type": "string",
-                    "description": "Status of the progress of OCR.",
-                    "enum": [
-                        "Processing",
-                        "Completed",
-                        "Cancelled"
-                    ]
-                },
                 "imageLink": {
-                    "type": "object",
-                    "schema": {
-                        "$ref": "#/definitions/Link"
-                    }
+                    "$ref": "#/definitions/Link"
                 },
                 "thumbnailLink": {
-                    "type": "object",
-                    "schema": {
-                        "$ref": "#/definitions/Link"
-                    }
+                    "$ref": "#/definitions/Link"
                 }
             }
         }

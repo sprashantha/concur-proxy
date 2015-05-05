@@ -65,6 +65,11 @@ module.exports = function(context, app, router) {
                         ocrStatus: "Unknown"
                     }
                 }
+                images.sort(function(a, b){
+                    var dateA=new Date(a.lastModified), dateB=new Date(b.lastModified);
+                    //sort by date descending
+                    return dateB-dateA;
+                });
 
                 logger.debug("Images:", meta);
                 logger.debug(images, meta);
@@ -263,9 +268,6 @@ module.exports = function(context, app, router) {
             }
         })
         .put(function (req, res) {
-            // let access_token = utility.extractToken(req, res);
-            // Validate the token.
-
             let meta = {";concur.correlation_id": req.requestId};
             let imageId = req.params.imageId;
             if (imageId) {
@@ -343,5 +345,90 @@ module.exports = function(context, app, router) {
                 return;
             });
 
+        });
+
+    router.route('/imaging/v4/images/ocr')
+        .post(function (req, res) {
+            // var access_token = utility.extractToken(req, res);
+            // Validate the token.
+
+            let meta = {";concur.correlation_id": req.requestId};
+            let body = req.body;
+            let files = req.files;
+            logger.debug("Body: ", meta);
+            logger.debug(body, meta);
+            logger.debug("files:", meta);
+            logger.debug(files, meta);
+            if (files && files.fileToUpload){
+                // Get the file name.
+                let path = files.fileToUpload.path;
+
+                if (path){
+                    logger.debug("path: " + path, meta);
+                    fs.exists(path, function(exists){
+                        logger.debug("File exists: " + exists, meta);
+                    });
+                    // Create a readable stream.
+                    let rstream = fs.createReadStream(path);
+
+                    // Generate a uuid and then save the image in the concur-imaging bucket by calling putObject().
+                    let key = uuid.v1();
+                    let params = {Bucket: 'concur-imaging', Key: key, Body: rstream};
+
+                    // Put the image into the concur-imaging bucket by calling putObject(). Use the imageId as the key.
+                    context.s3.putObject(params, function (err, data) {
+                        if (err) {
+                            res.status(502).json({error: "bad_gateway", reason: err.code});
+                            return;
+                        }
+                        // Delete the local file.
+                        fs.unlinkSync(path);
+
+                        // Check S3's http status code
+                        logger.debug("http response status code:" + this.httpResponse.statusCode);
+
+                        // Response
+                        res.location("/imaging/v4/images/" + params.Key + "/ocr").status(202).json({status: "Queued"});
+                        return;
+                    });
+                }
+                else{
+                    res.status(502).json({error: "bad_request", reason: "Missing file path"});
+                    return;
+                }
+            }
+            else{
+                res.status(400).json({error: "bad_request", reason: "Undefined body"});
+                return;
+            }
+
+        });
+
+    router.route('/imaging/v4/images/:imageId/ocr')
+        .get(function (req, res) {
+            let meta = {";concur.correlation_id": req.requestId};
+            let imageId = req.params.imageId;
+            if (imageId) {
+                imageId = urlencode.decode(imageId);
+            }
+            logger.debug("imageId: " + imageId, meta);
+
+            res.status(200).json({status: "Queued"});
+
         })
+        .put(function(req, res){
+
+            let meta = {";concur.correlation_id": req.requestId};
+            let imageId = req.params.imageId;
+            if (imageId) {
+                imageId = urlencode.decode(imageId);
+                logger.debug("imageId: " + imageId, meta);
+                res.location("/imaging/v4/images/" + imageId + "/ocr").status(202).json({status: "Queued"});
+            }
+            else{
+                logger.debug("Missing imageId", meta);
+                res.status(404).json({error: "Missing imageId"})
+            }
+
+        });
 }

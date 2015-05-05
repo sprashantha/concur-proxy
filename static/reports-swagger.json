@@ -360,9 +360,7 @@
                         "schema": {
                             "title": "Expense",
                             "type": "object",
-                            "schema": {
-                                "$ref": "#/definitions/Expense"
-                            }
+                            "$ref": "#/definitions/Expense"
                         }
                     }
                 }

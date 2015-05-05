@@ -153,7 +153,7 @@ module.exports = function(context, app, router) {
                             res.json(502, {error: "bad_gateway", reason: sendErr.code});
                         }
                         else{
-                            res.status(200).json({"STATUS": "QUEUED FOR APPROVAL"});
+                            res.status(202).json({"STATUS": "QUEUED FOR APPROVAL"});
                             return;
                         }
                     });
