@@ -1,7 +1,7 @@
 getLinks:
 curl -X GET  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' http://localhost:3000/imaging/v4/links -v | jq .
 
-getImages
+getImageList
 curl -X GET  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' http://localhost:3000/imaging/v4/images -v | jq .
 
 getImage:
@@ -10,18 +10,20 @@ curl -X GET -H "Accept:application/json" -H 'Authorization: EKL1hRqbSVw3Nd/njDgx
 curl -O -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' http://localhost:3000/imaging/v4/images/34da2dd0-e3bf-11e4-8430-113a36cd5b08 -v
 curl -O -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' -H 'if-none-match: 07853d003da44791fc84fa8e46be20f9' http://localhost:3000/imaging/v4/images/34da2dd0-e3bf-11e4-8430-113a36cd5b08 -v
 
-postImage:
+uploadImage:
 curl -X POST  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' -H "Content-Type: multipart/form-data" --form fileToUpload=@/Users/prashantha/Desktop/ObjectId-Table.png  http://localhost:3000/imaging/v4/images -v
 
-putImage:
+replaceImage:
 curl -X PUT  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' -H "Content-Type: multipart/form-data" --form fileToUpload=@/Users/prashantha/Desktop/Alligator.jpg  http://localhost:3000/imaging/v4/images/alligator -v
 
 deleteImage:
 curl -X DELETE -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' http://localhost:3000/imaging/v4/images/alligator -v
 
-ocrImage:
+ocrNewImage?:
 curl -X POST  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' -H "Content-Type: multipart/form-data" --form fileToUpload=@/Users/prashantha/Desktop/ObjectId-Table.png  http://localhost:3000/imaging/v4/images/ocr -v
+
+ocrExistingImage?:
 curl -X PUT  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM='  http://localhost:3000/imaging/v4/images/alligator/ocr -v
 
-getOcrStatus:
+getOcrDetails?:
 curl -X GET  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM='  http://localhost:3000/imaging/v4/images/0e3c6770-f2f0-11e4-996b-2d7d03938edf/ocr -v | jq .

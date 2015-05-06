@@ -26,10 +26,11 @@ module.exports = function(context, app, router) {
             let meta = {";concur.correlation_id": req.requestId};
             // Return the list of links.
             logger.debug("/imaging/v4/links", meta);
+            let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
 
             let links = [];
-            links[0] = {href: "imaging/v4/images", rel: "receipts,invoices", methods: "GET, POST"};
-            links[1] = {href: "imaging/v4/images/{imageId}", rel: "receipts,invoices", methods: "GET, PUT, DELETE"};
+            links[0] = {href: rootUrl + "/imaging/v4/images", rel: "receipts,invoices", methods: "GET, POST"};
+            links[1] = {href: rootUrl + "/imaging/v4/images/{imageId}", rel: "receipts,invoices", methods: "GET, PUT, DELETE"};
             res.status(200).send(links);
         });
 
@@ -52,17 +53,20 @@ module.exports = function(context, app, router) {
                 let length = data.Contents.length;
                 length = length < 1000 ? length: 1000;
 
+                let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+
                 for	(var index = 0; index < length; index++) {
                     // ImageInfo
                     images[index] = {
                         imageId: data.Contents[index].Key,
-                        imageLink: {href: "/imaging/v4/images/" + data.Contents[index].Key, rel: "receipts,invoices", methods: "GET, PUT, DELETE"},
+                        imageLink: {href: rootUrl + "/imaging/v4/images/" + data.Contents[index].Key,
+                            rel: "receipts,invoices",
+                            methods: "GET, PUT, DELETE"},
                         lastModified: data.Contents[index].LastModified,
                         etag: data.Contents[index].ETag,
                         size: data.Contents[index].ContentLength,
                         contentType: data.Contents[index].ContentType,
-                        imageSource: "Unknown",
-                        ocrStatus: "Unknown"
+                        imageSource: "Unknown"
                     }
                 }
                 images.sort(function(a, b){
@@ -82,6 +86,8 @@ module.exports = function(context, app, router) {
         .post(function (req, res) {
             // var access_token = utility.extractToken(req, res);
             // Validate the token.
+
+            let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
 
             let meta = {";concur.correlation_id": req.requestId};
             let body = req.body;
@@ -119,7 +125,7 @@ module.exports = function(context, app, router) {
                         logger.debug("http response status code:" + this.httpResponse.statusCode);
 
                         // Response
-                        res.location("/imaging/v4/images/" + params.Key).status(201).json({status: "Created"});
+                        res.location(rootUrl + "/imaging/v4/images/" + params.Key).status(201).json({status: "Created"});
                         return;
                     });
                 }
@@ -147,6 +153,8 @@ module.exports = function(context, app, router) {
             }
 
             logger.debug("imageId: " + imageId, meta);
+
+            let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
 
             let acceptJson = (req.get('Accept') == "application/json");
             let ifNoneMatch = req.get('if-none-match');
@@ -199,7 +207,7 @@ module.exports = function(context, app, router) {
                     else {
                         let imageInfo = {
                             imageId: params.Key,
-                            imageLink: {href: "/imaging/v4/images/" + params.Key, rel: "receipts,invoices", methods: "GET, PUT, DELETE"},
+                            imageLink: {href: rootUrl + "/imaging/v4/images/" + params.Key, rel: "receipts,invoices", methods: "GET, PUT, DELETE"},
                             lastModified: httpHeaders["last-modified"],
                             size: httpHeaders["content-length"],
                             contentType: httpHeaders["content-type"],
@@ -306,9 +314,11 @@ module.exports = function(context, app, router) {
                         // Pull out the http response statusCode.
                         logger.debug("http response status code:" + this.httpResponse.statusCode);
 
+                        let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+
 
                         // Response
-                        res.location("/imaging/v4/images/" + params.Key).status(200).json({status: "Uploaded"});
+                        res.location(rootUrl + "/imaging/v4/images/" + params.Key).status(200).json({status: "Uploaded"});
                         return;
                     });
 
@@ -352,6 +362,8 @@ module.exports = function(context, app, router) {
             // var access_token = utility.extractToken(req, res);
             // Validate the token.
 
+            let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+
             let meta = {";concur.correlation_id": req.requestId};
             let body = req.body;
             let files = req.files;
@@ -388,7 +400,7 @@ module.exports = function(context, app, router) {
                         logger.debug("http response status code:" + this.httpResponse.statusCode);
 
                         // Response
-                        res.location("/imaging/v4/images/" + params.Key + "/ocr").status(202).json({status: "Queued"});
+                        res.location(rootUrl + "/imaging/v4/images/" + params.Key + "/ocr").status(202).json({status: "Queued"});
                         return;
                     });
                 }
@@ -417,18 +429,17 @@ module.exports = function(context, app, router) {
 
         })
         .put(function(req, res){
-
+            let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
             let meta = {";concur.correlation_id": req.requestId};
             let imageId = req.params.imageId;
             if (imageId) {
                 imageId = urlencode.decode(imageId);
                 logger.debug("imageId: " + imageId, meta);
-                res.location("/imaging/v4/images/" + imageId + "/ocr").status(202).json({status: "Queued"});
+                res.location(rootUrl + "/imaging/v4/images/" + imageId + "/ocr").status(202).json({status: "Queued"});
             }
             else{
                 logger.debug("Missing imageId", meta);
                 res.status(404).json({error: "Missing imageId"})
             }
-
         });
 }

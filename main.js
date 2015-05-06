@@ -84,6 +84,7 @@ let
             nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
     }
     console.log("mongodb_url " + config.mongodb_url);
+    config.port = process.env.PORT || nconf.get('http:port');
 
 let context = {'config': config};
 
