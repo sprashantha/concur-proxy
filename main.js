@@ -160,7 +160,7 @@ const
                         }
                     callback(null, s3);
                 });
-            }, 500);
+            }, 200);
         },
         function (callback){
             setTimeout(function(){
