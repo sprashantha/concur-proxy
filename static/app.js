@@ -152,11 +152,13 @@ app.controller('loginController', function ($scope, $rootScope, $http, $location
             .success(function(data){
                 var token = data.value;
                 $rootScope.token = token;
+                $rootScope.tokenUrlEncoded = encodeURI(token);
                 $rootScope.isLoggedIn = 'true'
                 $location.path('/');
             })
             .error(function (data) {
                 $rootScope.remove("token");
+                $rootScope.remove("tokenUrlEncoded");
                 $rootScope.remove("isLoggedIn");
                 $scope.message = 'Error: Invalid user or password';
             })
