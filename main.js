@@ -144,8 +144,22 @@ const
                 s3.listBuckets(function(err, data) {
                     console.log("Connecting to AWS S3...");
                     console.log("Number of S3 buckets: " + data.Buckets.length);
+                });
+
+                // Test Imaging Bucket
+                s3.listObjects({Bucket: 'concur-imaging'}, function(err, data) {
+                        if (err) {
+                            console.log("Error getting imaging objects: " + err.statusCode);
+                            return;
+                        }
+                        if (data){
+                            console.log("Number of objects: " + data.Contents.length);
+                        }
+                    else{
+                            console.log("No data found");
+                        }
                     callback(null, s3);
-                })
+                });
             }, 500);
         },
         function (callback){
