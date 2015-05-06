@@ -140,12 +140,6 @@ const
                 let s3 = new AWS.S3();
                 context.s3 = s3;
 
-                // Test Connection to S3
-                s3.listBuckets(function(err, data) {
-                    console.log("Connecting to AWS S3...");
-                    console.log("Number of S3 buckets: " + data.Buckets.length);
-                });
-
                 // Test Imaging Bucket
                 s3.listObjects({Bucket: 'concur-imaging'}, function(err, data) {
                         if (err) {
@@ -160,7 +154,7 @@ const
                         }
                     callback(null, s3);
                 });
-            }, 200);
+            }, 500);
         },
         function (callback){
             setTimeout(function(){
