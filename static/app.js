@@ -139,6 +139,7 @@ app.controller("uploadController", function($scope,$rootScope, $http, $location)
 
 app.controller("logoutController", function($scope,$rootScope,$http){
     $rootScope.remove("token");
+    $rootScope.remove("tokenUrlEncoded");
 });
 
 app.controller('loginController', function ($scope, $rootScope, $http, $location) {
@@ -152,7 +153,7 @@ app.controller('loginController', function ($scope, $rootScope, $http, $location
             .success(function(data){
                 var token = data.value;
                 $rootScope.token = token;
-                $rootScope.tokenUrlEncoded = encodeURI(token);
+                $rootScope.tokenUrlEncoded = encodeURIComponent(token);
                 $rootScope.isLoggedIn = 'true'
                 $location.path('/');
             })
