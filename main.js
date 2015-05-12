@@ -251,8 +251,7 @@ const
 
         // If you are logging in then use a different mechanism to authorize the request.
         // Check the baseUrl.
-        if (req.url == "/login")
-        {
+        if ((req.url == "/login") || (req.url == "/favicon.ico")){
            next();
            return;
         }

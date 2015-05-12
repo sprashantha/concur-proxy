@@ -1,5 +1,77 @@
 var app = angular.module('concurApp', ['ngRoute']);
 
+app.factory('tokenService', function(){
+    var tokenService = {};
+    tokenService.token = '';
+
+    tokenService.clear = function(){
+        this.token = '';
+    }
+
+    return tokenService;
+});
+
+app.factory('authService', ['$http', 'tokenService', function($http, tokenService){
+    var authService = {};
+
+    authService.login = function(credentials){
+        return $http
+            .post('/login', credentials)
+            .success(function(data){
+                tokenService.token = data.value;
+            })
+            .error(function (data) {
+                tokenService.clear();
+            })
+    };
+
+    authService.logout = function(){
+        tokenService.clear();
+    }
+
+    authService.isAuthenticated = function(){
+        return (tokenService.token != '');
+    }
+
+    return authService;
+}]);
+
+app.controller('loginController', ['$scope','$http', '$location', 'authService', function ($scope, $http, $location, authService) {
+    $scope.credentials = {
+        username: '',
+        password: ''
+    };
+    $scope.login = function (credentials) {
+        authService.login(credentials).then(function () {
+            $location.path('/');
+        }, function () {
+            $scope.message = 'Error: Invalid user or password';
+        });
+    };
+}]);
+
+app.controller("logoutController", function($scope, $http, authService){
+    authService.logout();
+});
+
+
+app.run(function($rootScope, $location, authService) {
+
+    // register listener to watch route changes
+    $rootScope.$on( "$routeChangeStart", function(event, next, current) {
+        if ( authService && !authService.isAuthenticated()) {
+            // not authenticated, we should be going to #login
+            if ( next.templateUrl == "login.html" ) {
+                // already going to #login, no redirect needed
+            } else {
+                // not going to #login, we should redirect now
+                $location.path( "/login" );
+            }
+        }
+    });
+});
+
+
 
 app.config(function($routeProvider, $httpProvider){
     $routeProvider
@@ -51,51 +123,57 @@ app.config(function($routeProvider, $httpProvider){
 });
 
 
-app.controller("homeController", function($scope,$rootScope,$http){
-    $http({method: 'GET', url: '/concur/api/home', headers: {'authorization': $rootScope.token}})
+app.controller("homeController", function($scope,tokenService, $http){
+    $http({method: 'GET', url: '/concur/api/home', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.home = response;});
 });
 
-app.controller("tripsController", function($scope,$rootScope,$http){
-    $http({method: 'GET', url: '/concur/api/trips', headers: {'authorization': $rootScope.token}})
+app.controller("tripsController", function($scope, tokenService, $http){
+    $http({method: 'GET', url: '/concur/api/trips', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.trips = response;});
 });
 
-app.controller("expenseController", function($scope,$rootScope,$http){
-    $http({method: 'GET', url: '/concur/api/reports', headers: {'authorization': $rootScope.token}})
+app.controller("expenseController", function($scope,tokenService,$http){
+    $http({method: 'GET', url: '/concur/api/reports', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.reports = response;});
 });
 
-app.controller("imagesController", function($scope,$rootScope,$http){
-    $http({method: 'GET', url: '/imaging/v4/images', headers: {'authorization': $rootScope.token}})
+app.controller("imagesController", function($scope,tokenService,$http){
+    $scope.token = tokenService.token;
+    $scope.tokenUrlEncoded = encodeURIComponent(tokenService.token);
+    $http({method: 'GET', url: '/imaging/v4/images', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.images = response;});
 });
 
-app.controller("imageDetailsController", function($scope,$rootScope,$http, $routeParams){
+app.controller("imageDetailsController", function($scope,tokenService,$http, $routeParams){
+    $scope.token = tokenService.token;
+    $scope.tokenUrlEncoded = encodeURIComponent(tokenService.token);
     $scope.imageId = $routeParams.imageId;
 });
 
-app.controller("imageUploadController", function($scope,$rootScope, $http, $location){
+app.controller("imageUploadController", function($scope,tokenService, $http, $location){
+    $scope.token = tokenService.token;
+    $scope.tokenUrlEncoded = encodeURIComponent(tokenService.token);
     $scope.imageId = $routeParams.imageId;
 });
 
 
-app.controller("approvalsController", function($scope,$rootScope,$http){
-    $http({method: 'GET', url: '/concur/api/approvals', headers: {'authorization': $rootScope.token}})
+app.controller("approvalsController", function($scope,tokenService,$http){
+    $http({method: 'GET', url: '/concur/api/approvals', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.approvals = response;});
 });
 
-app.controller("approvalDetailsController", function($scope,$rootScope,$http, $routeParams){
-    $http({method: 'GET', url: '/concur/api/approvals/' + $routeParams.reportId, headers: {'authorization': $rootScope.token}})
+app.controller("approvalDetailsController", function($scope,tokenService,$http, $routeParams){
+    $http({method: 'GET', url: '/concur/api/approvals/' + $routeParams.reportId, headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.approvalDetail = response;});
 });
 
-app.controller("workflowController", function($scope,$rootScope, $http, $location){
+app.controller("workflowController", function($scope,tokenService, $http, $location){
     $scope.approveReport = function(){
         $scope.loading = true;
         $http({method: 'POST',
             url: '/concur/api/approvals/' + $scope.approvalDetail.ReportID,
-            headers: {'authorization': $rootScope.token},
+            headers: {'authorization': tokenService.token},
             data: {"WorkflowAction": {"Action": "Approve", "Comment": "Approved via Concur Connect"}}})
             .success(function(response){
                 if (response){
@@ -108,7 +186,7 @@ app.controller("workflowController", function($scope,$rootScope, $http, $locatio
     }
 });
 
-app.controller("uploadController", function($scope,$rootScope, $http, $location){
+app.controller("uploadController", function($scope,tokenService, $http, $location){
     $scope.add = function(){
         $scope.loading = true;
         $scope.add = function(){
@@ -120,7 +198,7 @@ app.controller("uploadController", function($scope,$rootScope, $http, $location)
                 //send you binary data via $http or $resource or do anything else with it
                 $http({method: 'POST',
                     url: '/imaging/v4/images',
-                    headers: {'authorization': $rootScope.token},
+                    headers: {'authorization': tokenService.token},
                     data: data})
                     .success(function(response){
                         if (response){
@@ -135,50 +213,3 @@ app.controller("uploadController", function($scope,$rootScope, $http, $location)
         }
     }
 });
-
-
-app.controller("logoutController", function($scope,$rootScope,$http){
-    $rootScope.remove("token");
-    $rootScope.remove("tokenUrlEncoded");
-});
-
-app.controller('loginController', function ($scope, $rootScope, $http, $location) {
-    $scope.credentials = {
-        username: '',
-        password: ''
-    };
-    $scope.login = function () {
-        $http
-            .post('/login', $scope.credentials)
-            .success(function(data){
-                var token = data.value;
-                $rootScope.token = token;
-                $rootScope.tokenUrlEncoded = encodeURIComponent(token);
-                $rootScope.isLoggedIn = 'true'
-                $location.path('/');
-            })
-            .error(function (data) {
-                $rootScope.remove("token");
-                $rootScope.remove("tokenUrlEncoded");
-                $rootScope.remove("isLoggedIn");
-                $scope.message = 'Error: Invalid user or password';
-            })
-    };
-});
-
-app.run(function($rootScope, $location) {
-
-    // register listener to watch route changes
-    $rootScope.$on( "$routeChangeStart", function(event, next, current) {
-        if ( !$rootScope.token) {
-            // no token, we should be going to #login
-            if ( next.templateUrl == "login.html" ) {
-                // already going to #login, no redirect needed
-            } else {
-                // not going to #login, we should redirect now
-                $location.path( "/login" );
-            }
-        }
-    });
-});
-
