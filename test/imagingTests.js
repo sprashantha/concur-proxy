@@ -1,7 +1,9 @@
 var should = require('chai').should(),
     expect = require('chai').expect,
-    supertest = require('supertest'),
-    api = supertest('http://localhost:3000');
+    supertest = require('supertest');
+
+var host = 'http://localhost:3000',
+    api = supertest(host);
 
 var access_token = 'EKL1hRqbSVw3Nd/njDgxl624qPM=';
 
@@ -65,47 +67,88 @@ describe('Images', function() {
     })
 })
 
-describe('Image Upload and Retrieval', function() {
+describe('Upload Images', function() {
 
     var imageCount = -1;
     var imageUrl = '';
 
-    beforeEach(function(){
+    it('checks the count of all the images', function (done) {
         api.get('/imaging/v4/images')
             .set('Authorization', access_token)
             .expect(200)
             .end(function (err, res) {
                 res.body.should.be.an.array;
                 imageCount = res.body.length;
-                expect(imageCount).to.be.greaterThan(0);
+                expect(imageCount).to.be.greaterThan(-1);
+                done();
             })
     })
 
-    it('uploads an image', function (done) {
+    it('posts a test image', function (done) {
         api.post('/imaging/v4/images')
             .set('Authorization', access_token)
             .field('Content-Type', 'multipart/form-data')
             .attach('fileToUpload', 'test/testImage.png')
             .end(function (err, res) {
-
                 expect(res.status).to.equal(201);
-
                 should.exist(res.header['location']);
-                should.exist(res.header['etag']);
-
                 imageUrl = res.header['location'];
-                done()
+                imageUrl = imageUrl.slice(host.length, imageUrl.length);
+                done();
             })
     })
 
+    it('gets all images and checks the count after post', function (done) {
+        api.get('/imaging/v4/images')
+            .set('Authorization', access_token)
+            .expect(200)
+            .end(function (err, res) {
+                res.body.should.be.an.array;
+                expect(res.body.length).to.equal(imageCount + 1);
+                done();
+            })
+    })
 
-    after(function() {
-        // Delete the image.
+    it('puts a replacement image', function (done) {
+        api.put(imageUrl)
+            .set('Authorization', access_token)
+            .field('Content-Type', 'multipart/form-data')
+            .attach('fileToUpload', 'test/replacementImage.jpeg')
+            .end(function (err, res) {
+                expect(res.status).to.equal(200);
+                should.exist(res.header['location']);
+                done();
+            })
+    })
+
+    it('gets all images and checks the count after put', function (done) {
+        api.get('/imaging/v4/images')
+            .set('Authorization', access_token)
+            .expect(200)
+            .end(function (err, res) {
+                res.body.should.be.an.array;
+                expect(res.body.length).to.equal(imageCount + 1);
+                done();
+            })
+    })
+
+    it('deletes an image', function (done) {
         api.delete(imageUrl)
             .set('Authorization', access_token)
             .end(function (err, res) {
                 expect(res.status).to.equal(200);
-                done()
+                done();
+            })
+    })
+
+    it('gets all images and checks the count after delete', function (done) {
+        api.get('/imaging/v4/images')
+            .set('Authorization', access_token)
+            .expect(200)
+            .end(function (err, res) {
+                res.body.should.be.an.array;
+                expect(res.body.length).to.equal(imageCount);
+                done();
             })
     })
 

@@ -139,19 +139,6 @@ module.exports = function(context, app, router) {
 
                         let headers = this.httpResponse.headers;
 
-                        if (data.ETag){
-                            res.set('ETag', data.ETag);
-                        }
-                        if (headers["content-type"]){
-                            res.set('Content-Type', headers["content-type"]);
-                        }
-                        if (headers["content-length"]){
-                            res.set('Content-Length', headers["content-length"]);
-                        }
-                        if (headers["last-modified"]){
-                            res.set('Last-Modified', headers["last-modified"]);
-                        }
-
                         // Response
                         res.location(rootUrl + "/imaging/v4/images/" + params.Key).status(201).json({status: "Created"});
                         return;
