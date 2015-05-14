@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Proxy to Concur's Web Services",
   "scripts": {
-    "start": "node --harmony ./main.js"
+    "start": "node --harmony ./main.js",
+    "test": "mocha test"
   },
   "author": "Prashanth",
   "license": "ISC",
@@ -26,5 +27,12 @@
     "formidable": "~1.0.17",
     "multer": "~0.1.8",
     "request-id": "~0.9.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "mocha": "~2.2.4",
+    "chai": "~2.3.0",
+    "grunt-mocha": "~0.4.12",
+    "supertest": "~1.0.1"
   }
 }

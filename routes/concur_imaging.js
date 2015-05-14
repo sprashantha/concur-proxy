@@ -20,6 +20,19 @@ const
 
 	
 module.exports = function(context, app, router) {
+
+    router.route('/imaging/v4')
+        .get(function (req, res) {
+            let meta = {";concur.correlation_id": req.requestId};
+            // Return the list of links.
+            logger.debug("/imaging/v4", meta);
+            let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+
+            let links = [];
+            links[0] = {href: rootUrl + "/imaging/v4/links", rel: "receipts,invoices", methods: "GET, POST"};
+            res.status(200).send(links);
+        });
+
     // Imaging api
     router.route('/imaging/v4/links')
         .get(function (req, res) {
@@ -123,6 +136,21 @@ module.exports = function(context, app, router) {
 
                         // Pull out the http response statusCode.
                         logger.debug("http response status code:" + this.httpResponse.statusCode);
+
+                        let headers = this.httpResponse.headers;
+
+                        if (data.ETag){
+                            res.set('ETag', data.ETag);
+                        }
+                        if (headers["content-type"]){
+                            res.set('Content-Type', headers["content-type"]);
+                        }
+                        if (headers["content-length"]){
+                            res.set('Content-Length', headers["content-length"]);
+                        }
+                        if (headers["last-modified"]){
+                            res.set('Last-Modified', headers["last-modified"]);
+                        }
 
                         // Response
                         res.location(rootUrl + "/imaging/v4/images/" + params.Key).status(201).json({status: "Created"});
