@@ -67,7 +67,7 @@ describe('Images', function() {
     })
 })
 
-describe('Upload Images', function() {
+describe('Upload and Delete Images', function() {
 
     var imageCount = -1;
     var imageUrl = '';
