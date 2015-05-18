@@ -49,7 +49,7 @@ describe('Links', function() {
 
 describe('Images', function() {
 
-    it('returns images', function (done) {
+    it('returns list of image metadata', function (done) {
         api.get('/imaging/v4/images')
             .set('Authorization', access_token)
             .expect(200)
@@ -67,7 +67,7 @@ describe('Images', function() {
     })
 })
 
-describe('Upload and Delete Images', function() {
+describe('Upload and Delete An Image', function() {
 
     var imageCount = -1;
     var imageUrl = '';
@@ -152,4 +152,47 @@ describe('Upload and Delete Images', function() {
             })
     })
 
+})
+
+describe('Download An Image', function() {
+
+    // Accept header is application/json.
+    it('returns the metadata associated with an image', function (done) {
+        api.get('/imaging/v4/images/alligator')
+            .set('Authorization', access_token)
+            .set('Accept', 'application/json')
+            .expect(200)
+            .end(function (err, res) {
+                res.body.should.exist;
+                res.body.should.have.property('imageId');
+                res.body.should.have.property('imageLink');
+                res.body.should.have.property('lastModified');
+                res.body.should.have.property('etag');
+                res.body.should.have.property('imageSource');
+                done();
+            })
+    })
+
+    // No accept header.
+    it('returns the binary image with etag', function (done) {
+        api.get('/imaging/v4/images/alligator')
+            .set('Authorization', access_token)
+            .expect(200)
+            .end(function (err, res) {
+                res.body.should.exist;
+                should.exist(res.header['etag']);
+                should.exist(res.header['content-type']);
+                should.exist(res.header['content-length']);
+                should.exist(res.header['last-modified']);
+                should.exist(res.header['vary']);
+                should.exist(res.header['cache-control']);
+                done();
+            })
+    })
+
+    it('returns a 404 error if image is not found', function (done) {
+        api.get('/imaging/v4/images/alligatore')
+            .set('Authorization', access_token)
+            .expect(404, done);
+    })
 })
