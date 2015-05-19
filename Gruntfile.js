@@ -1,20 +1,21 @@
 module.exports = function(grunt){
     grunt.initConfig({
-        pkg: grunt.file.readJSON('package.json'),
-
-        // Mocha
-        mocha: {
-            all: {
-                src: ['tests/imagingTests.js']
-            },
+        simplemocha: {
             options: {
-                run: true
-            }
+                globals: ['should'],
+                timeout: 3000,
+                ignoreLeaks: false,
+                ui: 'bdd',
+                reporter: 'tap'
+            },
+
+            all: { src: ['test/**/*.js'] }
         }
     });
 
-    // Load grunt mocha task
-    grunt.loadNpmTasks('grunt-mocha');
+// For this to work, you need to have run `npm install grunt-simple-mocha`
+    grunt.loadNpmTasks('grunt-simple-mocha');
 
-    grunt.registerTask('default', ['mocha']);
+// Add a default task. This is optional, of course :)
+    grunt.registerTask('default', 'simplemocha');
 };
