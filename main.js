@@ -7,19 +7,28 @@ const
     bodyParser = require('body-parser'),
     logger = require('./lib/logger.js'),
     requestId = require('request-id/express'),
-	app = express();
+    redis = require('redis'),
+    mongodb = require('mongodb'),
+    AWS = require('aws-sdk');
 
+
+ const
+    app = express();
+
+// RequestId to track http requests.
 app.use(requestId({
     resHeader: 'concur.correlation_id',
     reqHeader: 'concur.correlation_id'
 }));
 
+// CORS
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
 
+// Multer for multi-part file uploads.
 app.use(multer({dest: './uploads/'}));
 
     // parse application/x-www-form-urlencoded
@@ -33,7 +42,7 @@ app.use(multer({dest: './uploads/'}));
 	app.use(express.static(__dirname + '/bower_components'));
 
 
-
+// -- Config --
 let
 	config = {
 		concur_api_url: 'http://www.concursolutions.com/api/',
@@ -62,20 +71,21 @@ let
         logger.transports.console.level = config.logging_level;
     }
 
-    // Redis connections
+    // Redis connection parameters.
     config.redis_server = nconf.get('redis_server');
     config.redis_port = nconf.get('redis_port');
     console.log("config.redis_server " + config.redis_server);
     console.log("config.redis_port " + config.redis_port);
     console.log("auth_pass " + nconf.get('redis_password'));
 
-    // Mongodb connections
+    // Mongodb connection parameters.
     console.log("mongodb_server " + nconf.get('mongodb_server'));
     console.log("mongodb_port " + nconf.get('mongodb_port'));
     console.log("mongodb_database " + nconf.get('mongodb_database'));
     console.log("mongodb_user " + nconf.get('mongodb_user'));
     console.log("mongodb_password " + nconf.get('mongodb_password'));
 
+    // Transform the mongodb connection settings into a mongodb connection url.
     if (nconf.get('mongodb_user') != "" && nconf.get('mongodb_password') != ""){
         config.mongodb_url = "mongodb://" + nconf.get('mongodb_user') + ":" + nconf.get('mongodb_password') + "@"
          + nconf.get('mongodb_server') + ":" + nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
@@ -84,17 +94,16 @@ let
             nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
     }
     console.log("mongodb_url " + config.mongodb_url);
+
+    // HTTP port
     config.port = process.env.PORT || nconf.get('http:port');
 
+// The context is passed around the entire app.
 let context = {'config': config};
 
-// Connect to database services - Redis and MongoDB
-const redis = require('redis'),
-      mongoClient = require('mongodb').MongoClient;
 
-// Connect to AWS Services
+//  -- AWS Services  ---
 const
-      AWS = require('aws-sdk'),
 //      awsCredentialsPath = '../aws.credentials.json',
       sqsQueueUrl = 'https://sqs.us-west-2.amazonaws.com/749188282015/report-approvals';
 
@@ -105,12 +114,21 @@ const
      AWS.config.update({region: 'us-west-2'});
 
 
+   // Test connections to all remote services including Redis, MongoDB, S3 and SQS.
     async.parallel([
         function (callback) {
             setTimeout(function () {
                 let redisClient = redis.createClient(config.redis_port, config.redis_server, {"auth_pass":nconf.get('redis_password')});
                 redisClient.on('error', function (err) {
-                    console.error('Error connecting to Redis ' + err);
+                    var currentdate = new Date();
+                    var datetime = currentdate.getDate() + "/"
+                        + (currentdate.getMonth()+1)  + "/"
+                        + currentdate.getFullYear() + " @ "
+                        + currentdate.getHours() + ":"
+                        + currentdate.getMinutes() + ":"
+                        + currentdate.getSeconds();
+                    console.log(datetime);
+                    console.log('Error connecting to Redis ' + err);
                 });
                 redisClient.on('ready', function () {
                     console.log("Connected to Redis");
@@ -120,8 +138,8 @@ const
             }, 500);
         },
         function (callback) {
-             setTimeout(function () {
-
+            setTimeout(function () {
+                let mongoClient = mongodb.MongoClient;
                 mongoClient.connect(config.mongodb_url, function(connErr, db) {
                     if (connErr) {
                         console.error("Error connecting to Mongodb " + connErr);
@@ -133,7 +151,7 @@ const
                     }
                     callback(null, mongoClient);
                 })
-             }, 500);
+            }, 500);
         },
         function (callback){
             setTimeout(function(){
@@ -234,14 +252,12 @@ const
 
 
     let router = express.Router();
-   // app.use('/concur/api/', router);
-   // app.use('/imaging/v4/', router);
    app.use('/', router);
 
+// -- Request authorization --
 const
     users = require('./lib/models/users.js'),
     utility = require('./lib/util.js');
-
     router.use(function authorizeRequest(req, res, next) {
 
         logger.debug("req.url: " + req.url);
@@ -261,6 +277,7 @@ const
             users.validateToken(access_token, context, function (err, item) {
                 if (err) {
                     res.json(502, {error: "bad_gateway", reason: err.code});
+                    return;
                 }
                 if (item) {
                     logger.debug("validateToken item found");
@@ -286,7 +303,7 @@ const
     require('./routes/concur_trips.js')(context, app, router);
     require('./routes/concur_reports.js')(context, app, router);
     require('./routes/concur_approvals.js')(context, app, router);
-    require('./routes/concur_imaging.js')(context, app, router);
+    require('./routes/concur_imaging.js')(context, router);
 
 
 	
