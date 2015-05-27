@@ -9,7 +9,8 @@ const
     requestId = require('request-id/express'),
     redis = require('redis'),
     mongodb = require('mongodb'),
-    AWS = require('aws-sdk');
+    AWS = require('aws-sdk'),
+    dbWrapper = require('./lib/models/dbwrapper.js');
 
 
  const
@@ -71,6 +72,8 @@ let
         logger.transports.console.level = config.logging_level;
     }
 
+// -- Connection parameters to remote services --
+
     // Redis connection parameters.
     config.redis_server = nconf.get('redis_server');
     config.redis_port = nconf.get('redis_port');
@@ -113,6 +116,7 @@ const
      // If running in EC2, then it uses the IAM role associated with the EC2 instance.
      AWS.config.update({region: 'us-west-2'});
 
+// -- Setup and Test Remote Services ----
 
    // Test connections to all remote services including Redis, MongoDB, S3 and SQS.
     async.parallel([
@@ -147,7 +151,38 @@ const
                     else
                     {
                         console.log("Connected to Mongodb");
+                        // context.db = db;
                         context.db = db;
+                        context.gatedMongoWrapper = dbWrapper.getGatedMongoWrapper(db);
+
+                        // Test the connection to MongoDB.
+                        console.log("Testing db connection to MongoDB");
+                        context.db.collection('User', function (dbErr, collection) {
+                            if (dbErr) {
+                                logger.error("Mongodb Error:" + dbErr);
+                                return;
+                            }
+                            else {
+                                if (collection) {
+                                    console.log("Found user collection, connection is working ");
+                                }
+                                else {
+                                    console.log("Could not find user collection, something wrong with the connection.");
+                                }
+                            }
+                        })
+
+                        // Handle the close event and notify all cursors.
+                        db.on('close', function() {
+                            console.log("Database connection closed!");
+                            if (this._callBackStore) {
+                                for(var key in this._callBackStore._notReplied) {
+                                    this._callHandler(key, null, 'Connection Closed!');
+                                }
+                            }
+                        });
+
+
                     }
                     callback(null, mongoClient);
                 })
@@ -266,7 +301,6 @@ const
         logger.debug("req.path: " + req.path);
 
         // If you are logging in then use a different mechanism to authorize the request.
-        // Check the baseUrl.
         if ((req.url == "/login") || (req.url == "/favicon.ico")){
            next();
            return;
@@ -275,8 +309,11 @@ const
         var access_token = utility.extractToken2(req, res);
         if(access_token && access_token != '') {
             users.validateToken(access_token, context, function (err, item) {
+            // users.gatedValidateToken(access_token, context, function (err, item) {
                 if (err) {
-                    res.json(502, {error: "bad_gateway", reason: err.code});
+                    logger.debug("Error validating token: " + err);
+
+                    res.status(502).json({error: "bad_gateway", reason: err.code});
                     return;
                 }
                 if (item) {
