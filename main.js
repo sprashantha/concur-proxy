@@ -1,16 +1,15 @@
 'use strict'
 const
-    nconf = require('nconf'),
-	express = require('express'),
+    express = require('express'),
     multer  = require('multer'),
     async = require('async'),
     bodyParser = require('body-parser'),
     logger = require('./lib/logger.js'),
     requestId = require('request-id/express'),
-    redis = require('redis'),
-    mongodb = require('mongodb'),
     AWS = require('aws-sdk'),
-    dbWrapper = require('./lib/models/dbwrapper.js');
+    dbWrapper = require('./lib/models/dbwrapper.js'),
+    auth = require('./lib/auth.js'),
+    configSetup = require('./lib/config.js');
 
 
  const
@@ -44,62 +43,7 @@ app.use(multer({dest: './uploads/'}));
 
 
 // -- Config --
-let
-	config = {
-		concur_api_url: 'http://www.concursolutions.com/api/',
-		concur_reports_url: 'v3.0/expense/reportdigests',
-		concur_approvals_url: 'v3.0/expense/reportdigests?user=ALL&approvalStatusCode=A_PEND',
-        concur_report_2_0_url: 'expense/expensereport/v2.0/report/',
-        concur_report_1_1_url: 'expense/expensereport/v1.1/report/',
-		concur_trips_url: 'travel/trip/v1.1/',
-        use_mongoose: 'false',
-        use_pubsub: 'false',
-        use_sqs: 'true',
-        mongodb_url: '',
-        redis_server: '',
-        redis_port: '',
-        logging_level: ''
-	};
-
-
-    // Read Configuration Parameters
-    nconf.argv().env();
-    nconf.file({ file: 'config.json' });
-
-    // Set the logging level in case it needs to be overridden.
-    config.logging_level = nconf.get('logging_level')
-    if (config.logging_level && config.logging_level != ''){
-        logger.transports.console.level = config.logging_level;
-    }
-
-// -- Connection parameters to remote services --
-
-    // Redis connection parameters.
-    config.redis_server = nconf.get('redis_server');
-    config.redis_port = nconf.get('redis_port');
-    console.log("config.redis_server " + config.redis_server);
-    console.log("config.redis_port " + config.redis_port);
-    console.log("auth_pass " + nconf.get('redis_password'));
-
-    // Mongodb connection parameters.
-    console.log("mongodb_server " + nconf.get('mongodb_server'));
-    console.log("mongodb_port " + nconf.get('mongodb_port'));
-    console.log("mongodb_database " + nconf.get('mongodb_database'));
-    console.log("mongodb_user " + nconf.get('mongodb_user'));
-    console.log("mongodb_password " + nconf.get('mongodb_password'));
-
-    // Transform the mongodb connection settings into a mongodb connection url.
-    if (nconf.get('mongodb_user') != "" && nconf.get('mongodb_password') != ""){
-        config.mongodb_url = "mongodb://" + nconf.get('mongodb_user') + ":" + nconf.get('mongodb_password') + "@"
-         + nconf.get('mongodb_server') + ":" + nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
-    }else{
-        config.mongodb_url = "mongodb://" + nconf.get('mongodb_server') + ":" +
-            nconf.get('mongodb_port') + "/" + nconf.get('mongodb_database');
-    }
-    console.log("mongodb_url " + config.mongodb_url);
-
-    // HTTP port
-    config.port = process.env.PORT || nconf.get('http:port');
+let config = configSetup.setupConfig();
 
 // The context is passed around the entire app.
 let context = {'config': config};
@@ -119,68 +63,25 @@ const
 // -- Setup and Test Remote Services ----
 
    // Test connections to all remote services including Redis, MongoDB, S3 and SQS.
-    async.parallel([
+async.parallel([
         function (callback) {
             setTimeout(function () {
-                let redisClient = redis.createClient(config.redis_port, config.redis_server, {"auth_pass":nconf.get('redis_password')});
-                redisClient.on('error', function (err) {
-                    var currentdate = new Date();
-                    var datetime = currentdate.getDate() + "/"
-                        + (currentdate.getMonth()+1)  + "/"
-                        + currentdate.getFullYear() + " @ "
-                        + currentdate.getHours() + ":"
-                        + currentdate.getMinutes() + ":"
-                        + currentdate.getSeconds();
-                    console.log(datetime);
-                    console.log('Error connecting to Redis ' + err);
-                });
-                redisClient.on('ready', function () {
-                    console.log("Connected to Redis");
-                    context.redisClient = redisClient;
+                dbWrapper.setupRedisConnection(context, function(err){
+                    if (err){
+                        logger.info("Mongo setup error");
+                    }
                 })
-                callback(null, redisClient);
+                callback();
             }, 500);
         },
         function (callback) {
             setTimeout(function () {
-                let mongoWrapper =  new dbWrapper.MongoWrapper();
-
-                let mongoClient = mongodb.MongoClient;
-                let gatedMongoClient = mongoWrapper.getGatedMongoClient(mongoClient);
-
-                gatedMongoClient.connect(config.mongodb_url, function(connErr, db) {
-                    if (connErr) {
-                        console.error("Error connecting to Mongodb " + connErr);
-                        return;
+                dbWrapper.setupMongoConnection(context, function(err){
+                    if (err){
+                        logger.info("Mongo setup error");
                     }
-                    else
-                    {
-                        console.log("Connected to Mongodb");
-
-                        // Handle the close event.
-                        db.on('close', function() {
-                            console.log("Database connection closed!");
-                        });
-
-                        context.gatedDb = mongoWrapper.getGatedMongoDb(db);
-                        context.gatedDb.collection('User', function(dbErr, userCollection){
-                            if(dbErr){
-                                console.log("Error accessing user collection");
-                            }
-                            if (userCollection){
-                                // This should never be used!!
-                                // It is purely for demoing what happens if you don't use a circuit breaker.
-                                // context.gatedUserCollection = userCollection;
-
-                                // Use a gated mongodb collection so that queries can fail fast if there is a database
-                                // issue. A gated collection handle (or any gated handle for that matter)
-                                // has a built-in circuit breaker.
-                                context.gatedUserCollection = mongoWrapper.getGatedMongoCollection(userCollection);
-                            }
-                        });
-                    }
-                    callback(null, mongoClient);
                 })
+                callback();
             }, 500);
         },
         function (callback){
@@ -191,16 +92,16 @@ const
                 // Test Imaging Bucket
                 s3.listObjects({Bucket: 'concur-imaging'}, function(err, data) {
                         if (err) {
-                            console.log("Error getting imaging objects: " + err.statusCode);
+                            logger.info("Error getting imaging objects: " + err.statusCode);
                             return;
                         }
                         if (data){
-                            console.log("Number of objects: " + data.Contents.length);
+                            logger.info("Number of objects: " + data.Contents.length);
                         }
                     else{
-                            console.log("No data found");
+                            logger.info("No data found");
                         }
-                    callback(null, s3);
+                    callback();
                 });
             }, 500);
         },
@@ -218,14 +119,14 @@ const
                 }
 
                 // Send a test message to SQS.
-                console.log("Sending a test message to SQS...");
+                logger.info("Sending a test message to SQS...");
                 sqs.sendMessage(params, function(sendErr, data) {
                     if (sendErr){
-                        console.log(sendErr, sendErr.stack);
+                        logger.info(sendErr, sendErr.stack);
                     }
                     else{
-                        console.log("Received SQS Response:");
-                        console.log(data);
+                        logger.info("Received SQS Response:");
+                        logger.info(data);
 
                         // Receive the message.
                         sqs.receiveMessage({
@@ -235,27 +136,27 @@ const
                             WaitTimeSeconds: 0 // seconds - how long should we wait for a message?
                         }, function(recvErr, recvData) {
                             if (recvErr){
-                                console.log(recvErr, recvErr.stack);
+                                logger.info(recvErr, recvErr.stack);
                             }
                             if (recvData && recvData.Messages){
                                 // Read the message
-                                console.log("Received SQS Messages: " + recvData.Messages.toString());
+                                logger.info("Received SQS Messages: " + recvData.Messages.toString());
                                 let message = recvData.Messages[0];
-                                console.log("Received SQS Message: " + message.toString());
-                                console.log("message.MessageId: " + message.MessageId);
-                                console.log("data.MessageId: " + data.MessageId);
+                                logger.info("Received SQS Message: " + message.toString());
+                                logger.info("message.MessageId: " + message.MessageId);
+                                logger.info("data.MessageId: " + data.MessageId);
                                 if (message.MessageId == data.MessageId){
                                     // Delete the message
-                                    console.log("Deleting SQS Message with MessageId: " + data.MessageId);
+                                    logger.info("Deleting SQS Message with MessageId: " + data.MessageId);
                                     sqs.deleteMessage({
                                         QueueUrl: sqsQueueUrl,
                                         ReceiptHandle: message.ReceiptHandle
                                     }, function(delErr, delData){
                                         if (delErr){
-                                            console.log(delErr);
+                                            logger.info(delErr);
                                         }
                                         else{
-                                            console.log("Deleted message.")
+                                            logger.info("Deleted message.")
                                         }
                                     })
                                 }
@@ -271,62 +172,22 @@ const
                 console.error(err);
             }
 
-            console.log("Attempting to start server on port " + (process.env.PORT || nconf.get('http:port')));
+            logger.info("Attempting to start server on port " + context.config.port);
 
             // Start the server and listen on port set by the environment (example: 8081 in AWS) or 3000.
-            app.listen((process.env.PORT || nconf.get('http:port')), function(){
-                console.log("Server started. Listening on port " + (process.env.PORT || nconf.get('http:port')));
+            app.listen(context.config.port, function(){
+                logger.info("Server started. Listening on port " + context.config.port);
 
             })
         });
 
 
     let router = express.Router();
-   app.use('/', router);
-
-// -- Request authorization --
-const
-    users = require('./lib/models/users.js'),
-    utility = require('./lib/util.js');
-    router.use(function authorizeRequest(req, res, next) {
-
-        logger.debug("req.url: " + req.url);
-        logger.debug("req.originalUrl: " + req.originalUrl);
-        logger.debug("req.baseUrl: " + req.baseUrl);
-        logger.debug("req.path: " + req.path);
-
-        // If you are logging in then use a different mechanism to authorize the request.
-        if ((req.url == "/login") || (req.url == "/favicon.ico")){
-           next();
-           return;
-        }
-        // Validate the access token
-        var access_token = utility.extractToken2(req, res);
-        if(access_token && access_token != '') {
-            users.validateToken(access_token, context, function (err, item) {
-            // users.gatedValidateToken(access_token, context, function (err, item) {
-                if (err) {
-                    logger.debug("Error validating token: " + err);
-
-                    res.status(502).json({error: "bad_gateway", reason: err.code});
-                    return;
-                }
-                if (item) {
-                    logger.debug("validateToken item found");
-                    next();
-                }
-                else {
-                    res.status(401).send("Unauthorized");
-                    return;
-                }
-            });
-        }
-        else{
-            res.status(401).send("Unauthorized");
-            return;
-        }
-
+    app.use('/', router);
+    router.use(function authorizeRequest(req, res, next){
+        auth.authorizeRequest(req, res, context, next);
     });
+
 
     // Routes
     require('./lib/concur_home.js')(context, app);
