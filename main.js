@@ -168,8 +168,14 @@ const
                                 console.log("Error accessing user collection");
                             }
                             if (userCollection){
+                                // This should never be used!!
+                                // It is purely for demoing what happens if you don't use a circuit breaker.
+                                // context.gatedUserCollection = userCollection;
+
+                                // Use a gated mongodb collection so that queries can fail fast if there is a database
+                                // issue. A gated collection handle (or any gated handle for that matter)
+                                // has a built-in circuit breaker.
                                 context.gatedUserCollection = mongoWrapper.getGatedMongoCollection(userCollection);
-                                logger.debug(Object.keys(context.gatedUserCollection));
                             }
                         });
                     }
