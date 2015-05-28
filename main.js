@@ -143,46 +143,35 @@ const
         },
         function (callback) {
             setTimeout(function () {
+                let mongoWrapper =  new dbWrapper.MongoWrapper();
+
                 let mongoClient = mongodb.MongoClient;
-                mongoClient.connect(config.mongodb_url, function(connErr, db) {
+                let gatedMongoClient = mongoWrapper.getGatedMongoClient(mongoClient);
+
+                gatedMongoClient.connect(config.mongodb_url, function(connErr, db) {
                     if (connErr) {
                         console.error("Error connecting to Mongodb " + connErr);
+                        return;
                     }
                     else
                     {
                         console.log("Connected to Mongodb");
-                        // context.db = db;
-                        context.db = db;
-                        context.gatedMongoWrapper = dbWrapper.getGatedMongoWrapper(db);
 
-                        // Test the connection to MongoDB.
-                        console.log("Testing db connection to MongoDB");
-                        context.db.collection('User', function (dbErr, collection) {
-                            if (dbErr) {
-                                logger.error("Mongodb Error:" + dbErr);
-                                return;
-                            }
-                            else {
-                                if (collection) {
-                                    console.log("Found user collection, connection is working ");
-                                }
-                                else {
-                                    console.log("Could not find user collection, something wrong with the connection.");
-                                }
-                            }
-                        })
-
-                        // Handle the close event and notify all cursors.
+                        // Handle the close event.
                         db.on('close', function() {
                             console.log("Database connection closed!");
-                            if (this._callBackStore) {
-                                for(var key in this._callBackStore._notReplied) {
-                                    this._callHandler(key, null, 'Connection Closed!');
-                                }
-                            }
                         });
 
-
+                        context.gatedDb = mongoWrapper.getGatedMongoDb(db);
+                        context.gatedDb.collection('User', function(dbErr, userCollection){
+                            if(dbErr){
+                                console.log("Error accessing user collection");
+                            }
+                            if (userCollection){
+                                context.gatedUserCollection = mongoWrapper.getGatedMongoCollection(userCollection);
+                                logger.debug(Object.keys(context.gatedUserCollection));
+                            }
+                        });
                     }
                     callback(null, mongoClient);
                 })
