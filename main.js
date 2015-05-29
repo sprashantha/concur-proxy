@@ -189,10 +189,9 @@ async.parallel([
     });
 
 
-    // Routes
-    require('./lib/concur_home.js')(context, app);
-    require('./lib/concur_user.js')(context, app);
-    require('./lib/concur_login.js')(context, app);
+    // Route
+    require('./routes/concur_login.js')(context, app);
+    require('./routes/concur_home.js')(context, app, router);
     require('./routes/concur_trips.js')(context, app, router);
     require('./routes/concur_reports.js')(context, app, router);
     require('./routes/concur_approvals.js')(context, app, router);

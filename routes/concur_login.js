@@ -2,13 +2,13 @@
 
 const 
 	request = require('request'),
-	logger = require('./logger.js'),
+    logger = require('../lib/logger.js'),
     concur = require('concur-platform'),
     urlencode = require('urlencode'),
     md5 = require('MD5');
 
 const
-    users = require('./models/users.js');
+    users = require('../lib/models/users.js');
 	
 module.exports = function(context, app){
     app.post('/login', function (req, res) {

@@ -2,12 +2,12 @@
 
 const 
 	request = require('request'),
-    logger = require('./logger.js'),
+    logger = require('../lib/logger.js'),
     urlencode = require('urlencode'),
     async = require('async');
 
 const
-    cache = require('./models/cache.js');
+    cache = require('../lib/models/cache.js');
 	
 module.exports = function(context, app){
             // Home Dashboard
