@@ -8,6 +8,7 @@ const
     requestId = require('request-id/express'),
     AWS = require('aws-sdk'),
     dbWrapper = require('./lib/models/dbwrapper.js'),
+    awsWrapper = require('./lib/models/awswrapper.js'),
     auth = require('./lib/auth.js'),
     configSetup = require('./lib/config.js');
 
@@ -45,11 +46,11 @@ app.use(multer({dest: './uploads/'}));
 // -- Config --
 let config = configSetup.setupConfig();
 
-// The context is passed around the entire app.
+// Create the context object. The context is passed around the entire app.
 let context = {'config': config};
 
 
-//  -- AWS Services  ---
+//  --  AWS Settings  ---
 const
 //      awsCredentialsPath = '../aws.credentials.json',
       sqsQueueUrl = 'https://sqs.us-west-2.amazonaws.com/749188282015/report-approvals';
@@ -60,9 +61,7 @@ const
      // If running in EC2, then it uses the IAM role associated with the EC2 instance.
      AWS.config.update({region: 'us-west-2'});
 
-// -- Setup and Test Remote Services ----
-
-   // Test connections to all remote services including Redis, MongoDB, S3 and SQS.
+// -- Setup and Test Remote Services including Redis, MongoDB, S3 and SQS. ----
 async.parallel([
         function (callback) {
             setTimeout(function () {
@@ -90,19 +89,7 @@ async.parallel([
                 context.s3 = s3;
 
                 // Test Imaging Bucket
-                s3.listObjects({Bucket: 'concur-imaging'}, function(err, data) {
-                        if (err) {
-                            logger.info("Error getting imaging objects: " + err.statusCode);
-                            return;
-                        }
-                        if (data){
-                            logger.info("Number of objects: " + data.Contents.length);
-                        }
-                    else{
-                            logger.info("No data found");
-                        }
-                    callback();
-                });
+                awsWrapper.testS3ImagingConnection(s3, callback);
             }, 500);
         },
         function (callback){
@@ -110,61 +97,7 @@ async.parallel([
                 let sqs = new AWS.SQS();
                 context.sqs = sqs;
                 context.sqsQueueUrl = sqsQueueUrl;
-
-                // Test SQS Connection
-                let params = {
-                    MessageBody: '{"Test": "true", "Message":"This is a Test Message"}',
-                    QueueUrl: sqsQueueUrl,
-                    DelaySeconds: 0
-                }
-
-                // Send a test message to SQS.
-                logger.info("Sending a test message to SQS...");
-                sqs.sendMessage(params, function(sendErr, data) {
-                    if (sendErr){
-                        logger.info(sendErr, sendErr.stack);
-                    }
-                    else{
-                        logger.info("Received SQS Response:");
-                        logger.info(data);
-
-                        // Receive the message.
-                        sqs.receiveMessage({
-                            QueueUrl: sqsQueueUrl,
-                            MaxNumberOfMessages: 1, // how many messages do we wanna retrieve?
-                            VisibilityTimeout: 0, // seconds - how long we want a lock on this job
-                            WaitTimeSeconds: 0 // seconds - how long should we wait for a message?
-                        }, function(recvErr, recvData) {
-                            if (recvErr){
-                                logger.info(recvErr, recvErr.stack);
-                            }
-                            if (recvData && recvData.Messages){
-                                // Read the message
-                                logger.info("Received SQS Messages: " + recvData.Messages.toString());
-                                let message = recvData.Messages[0];
-                                logger.info("Received SQS Message: " + message.toString());
-                                logger.info("message.MessageId: " + message.MessageId);
-                                logger.info("data.MessageId: " + data.MessageId);
-                                if (message.MessageId == data.MessageId){
-                                    // Delete the message
-                                    logger.info("Deleting SQS Message with MessageId: " + data.MessageId);
-                                    sqs.deleteMessage({
-                                        QueueUrl: sqsQueueUrl,
-                                        ReceiptHandle: message.ReceiptHandle
-                                    }, function(delErr, delData){
-                                        if (delErr){
-                                            logger.info(delErr);
-                                        }
-                                        else{
-                                            logger.info("Deleted message.")
-                                        }
-                                    })
-                                }
-                            }
-                            callback();
-                        });
-                    }
-                })
+                awsWrapper.testSQSConnection(sqs, sqsQueueUrl, callback);
             }, 500);
         }],
         function (err, results) {
@@ -181,7 +114,7 @@ async.parallel([
             })
         });
 
-
+    // Setup the router including authorization.
     let router = express.Router();
     app.use('/', router);
     router.use(function authorizeRequest(req, res, next){
@@ -189,7 +122,7 @@ async.parallel([
     });
 
 
-    // Route
+    // Route requests.
     require('./routes/concur_login.js')(context, app);
     require('./routes/concur_home.js')(context, app, router);
     require('./routes/concur_trips.js')(context, app, router);
