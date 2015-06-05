@@ -137,6 +137,7 @@ exports.postImage = function(context, req, res) {
             return;
         }
     }
+
 exports.getImage = function(context, req, res) {
         let meta = {";concur.correlation_id": req.requestId};
         let imageId = req.params.imageId;
@@ -327,6 +328,7 @@ exports.putImage = function(context, req, res) {
             return;
         }
     }
+
 exports.deleteImage = function(context, req, res){
 
         // let access_token = utility.extractToken(req, res);

@@ -36,3 +36,4 @@ module.exports = function(context, router) {
             imagingHandler.deleteImage(context, req, res);
         });
 }
+
