@@ -105,8 +105,8 @@ exports.postImage = function(context, req, res) {
                 let rstream = fs.createReadStream(path);
 
                 // Generate a uuid and then save the image in the concur-imaging bucket by calling putObject().
-                let key = uuid.v1();
-                let params = {Bucket: 'concur-imaging', Key: key, Body: rstream};
+                let key = files.fileToUpload.name;
+                let params = {Bucket: 'concur-imaging', Key: key, Body: rstream, ContentType: files.fileToUpload.mimetype};
 
                 // Put the image into the concur-imaging bucket by calling putObject(). Use the imageId as the key.
                 context.s3.putObject(params, function (err, data) {
@@ -296,7 +296,7 @@ exports.putImage = function(context, req, res) {
                 // Create a readable stream.
                 let rstream = fs.createReadStream(path);
 
-                let params = {Bucket: 'concur-imaging', Key: imageId, Body: rstream};
+                let params = {Bucket: 'concur-imaging', Key: imageId, Body: rstream, ContentType: files.fileToUpload.mimetype};
                 // Put the image into the concur-imaging bucket by calling putObject(). Use the imageId as the key.
                 context.s3.putObject(params, function (err, data) {
                     if (err) {
