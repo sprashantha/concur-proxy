@@ -61,6 +61,9 @@ exports.getImages = function(context, req, res) {
                     imageLink: {href: rootUrl + "/imaging/v4/images/" + data.Contents[index].Key,
                         rel: "receipts,invoices",
                         methods: "GET, PUT, DELETE"},
+                    thumbnailLink: {href: rootUrl + "/imaging/v4/images/" + data.Contents[index].Key + "/thumbnail",
+                        rel: "receipts,invoices",
+                        methods: "GET"},
                     lastModified: data.Contents[index].LastModified,
                     etag: data.Contents[index].ETag,
                     size: data.Contents[index].ContentLength,
@@ -221,7 +224,7 @@ exports.getImage = function(context, req, res) {
             res.vary("Accept, Accept-Encoding");
 
             awsRequest.
-                on('httpHeaders', function(statusCode, headers, resp){
+                on('httpHeaders', function(statusCode, headers){
                     logger.debug("httpHeaders:", meta);
                     logger.debug(headers, meta);
                     if (headers["etag"]){
@@ -269,6 +272,61 @@ exports.getImage = function(context, req, res) {
         }
 
     }
+
+exports.getThumbnail = function(context, req, res) {
+    let meta = {";concur.correlation_id": req.requestId};
+    let imageId = req.params.imageId;
+    if (imageId) {
+        imageId = urlencode.decode(imageId);
+    }
+
+    logger.debug("Getting thumbnail for imageId: " + imageId, meta);
+
+    let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+
+    res.set('Cache-Control', 'max-age=30, must-revalidate');
+    res.vary("Accept, Accept-Encoding");
+
+    let ifNoneMatch = req.get('if-none-match');
+    logger.debug("if-none-match: " + ifNoneMatch, meta);
+    let params = {Bucket: 'concur-imagingresized', Key: "resized-" + imageId, IfNoneMatch: ifNoneMatch};
+    let awsRequest = context.s3.getObject(params);
+
+    awsRequest.
+        on('httpHeaders', function (statusCode, headers) {
+            logger.debug("httpHeaders:", meta);
+            logger.debug(headers, meta);
+            if (headers["etag"]) {
+                res.set('ETag', headers["etag"]);
+            }
+            if (headers["content-type"]) {
+                res.set('Content-Type', headers["content-type"]);
+            }
+            if (headers["content-length"]) {
+                res.set('Content-Length', headers["content-length"]);
+            }
+            if (headers["last-modified"]) {
+                res.set('Last-Modified', headers["last-modified"]);
+            }
+            res.status(statusCode);
+        }).
+        on('httpData', function (chunk) {
+            if (chunk) {
+                res.write(chunk);
+            }
+
+        }).
+        on('httpDone', function () {
+            logger.debug("httpDone:", meta);
+            res.end();
+        }).
+        on('complete', function () {
+            logger.debug("complete:", meta);
+            res.end();
+        }).send();
+}
+
+
 
 exports.putImage = function(context, req, res) {
         let meta = {";concur.correlation_id": req.requestId};

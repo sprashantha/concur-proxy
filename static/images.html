@@ -25,17 +25,17 @@
           <thead>
           <tr>
               <th>ImageId</th>
-              <th>Image Link</th>
               <th>Last Modified Date</th>
               <th>ETag</th>
+              <th>Thumbnail</th>
           </tr>
           </thead>
           <tbody>
           <tr ng-repeat="i in images">
               <td><a ng-href="#/images/{{i.imageId}}">{{ i.imageId }}</a></td>
-              <td>{{ i.imageLink.href }}</td>
               <td>{{ i.lastModified }}</td>
               <td>{{ i.etag }}</td>
+              <td><img ng-src="imaging/v4/images/{{i.imageId}}/thumbnail?access_token={{tokenUrlEncoded}}" alt=""></td>
           </tr>
           </tbody>
       </table>

@@ -35,5 +35,10 @@ module.exports = function(context, router) {
         .delete(function (req, res) {
             imagingHandler.deleteImage(context, req, res);
         });
+
+    router.route('/imaging/v4/images/:imageId/thumbnail')
+        .get(function (req, res) {
+            imagingHandler.getThumbnail(context, req, res);
+        });
 }
 
