@@ -24,18 +24,18 @@
       <table ng-show="images.length">
           <thead>
           <tr>
+              <th>Thumbnail</th>
               <th>ImageId</th>
               <th>Last Modified Date</th>
               <th>ETag</th>
-              <th>Thumbnail</th>
           </tr>
           </thead>
           <tbody>
           <tr ng-repeat="i in images">
+              <td><a ng-href="#/images/{{i.imageId}}"><img ng-src="imaging/v4/images/{{i.imageId}}/thumbnail?access_token={{tokenUrlEncoded}}" alt=""></a></td>
               <td><a ng-href="#/images/{{i.imageId}}">{{ i.imageId }}</a></td>
               <td>{{ i.lastModified }}</td>
               <td>{{ i.etag }}</td>
-              <td><img ng-src="imaging/v4/images/{{i.imageId}}/thumbnail?access_token={{tokenUrlEncoded}}" alt=""></td>
           </tr>
           </tbody>
       </table>
