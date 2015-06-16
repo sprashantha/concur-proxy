@@ -6,9 +6,9 @@
         "description": "This set of APIs deals with retrieving, saving, deleting and        submitting expense reports.\n"
     },
     "host": "api.concur.com",
-    "basePath": "/expense/report/v4",
+    "basePath": "/expense/v4",
     "paths": {
-        "/reports/links": {
+        "/links": {
             "get": {
                 "tags": [
                     "root"
@@ -366,7 +366,7 @@
                 }
             }
         },
-        "/approvers/{userId}/reports": {
+        "/approvals/approvers/{userId}/reports": {
             "get": {
                 "tags": [
                     "approvals"
@@ -404,7 +404,7 @@
                 }
             }
         },
-        "/approvers/{userId}/reports/{reportId}": {
+        "/approvals/approvers/{userId}/reports/{reportId}": {
             "get": {
                 "tags": [
                     "approvals"
@@ -441,13 +441,13 @@
                 }
             }
         },
-        "/approvers/{userId}/reports/{reportId}/approval": {
+        "/approvals/approvers/{userId}/reports/{reportId}/workflow": {
             "get": {
                 "tags": [
                     "approvals"
                 ],
-                "operationId": "getApproval",
-                "description": "Gets the approval details of a report including its approval status, payment status and approver information.\n",
+                "operationId": "getWorkflow",
+                "description": "Gets the workflow details of a report for an approver including its approval status, payment status and approver information.\n",
                 "produces": [
                     "application/json"
                 ],
@@ -481,7 +481,7 @@
                 "tags": [
                     "approvals"
                 ],
-                "operationId": "approveReport",
+                "operationId": "changeWorkflow",
                 "description": "Approve or reject the report",
                 "produces": [
                     "application/json"
@@ -546,13 +546,33 @@
                     "type": "string",
                     "description": "Business purpose of the report."
                 },
-                "total": {
+                "totalAmount": {
                     "type": "number",
-                    "description": "The total requested amount in the currency represented by the currencyCode field."
+                    "description": "The total amount captured by the expense report in the reimbursement currency represented by the currencyCode field."
+                },
+                "personalAmount": {
+                    "type": "number",
+                    "description": "The amount of personal expenses in the reimbursement currency represented by the currencyCode field."
+                },
+                "claimedAmount": {
+                    "type": "number",
+                    "description": "The claimed amount is the totalAmount minus the personalAmount."
+                },
+                "approvedAmount": {
+                    "type": "number",
+                    "description": "The amount approved for reimbursement by approvers. Approvers can adjust the approval ammount of an expense item (partial approvals)."
                 },
                 "currencyCode": {
                     "type": "string",
                     "description": "ISO 4217 currency code of the submitter's reimbursement currency."
+                },
+                "country": {
+                    "type": "string",
+                    "description": "ISO 3166 country code of the submitter's home country."
+                },
+                "reportDate": {
+                    "type": "string",
+                    "description": "User entered date associated with the report in ISO-8601 UTC format. Typically this refers to the date of the earliest expense in the report."
                 },
                 "createDate": {
                     "type": "string",
@@ -561,6 +581,26 @@
                 "submitDate": {
                     "type": "string",
                     "description": "The date the report was submitted in ISO-8601 UTC format.\n"
+                },
+                "paidDate": {
+                    "type": "string",
+                    "description": "The date the report was paid in ISO-8601 UTC format.\n"
+                },
+                "lastModifiedDate": {
+                    "type": "string",
+                    "description": "The last modified date of the report in ISO-8601 UTC format."
+                },
+                "ledgerName": {
+                    "type": "string",
+                    "description": "Name of the Ledger used when creating the report. Useful for accounting integration."
+                },
+                "everSentBack": {
+                    "type": "string",
+                    "description": "Y if sent back, N if not."
+                },
+                "hasException": {
+                    "type": "string",
+                    "description": "Y if the report or any of its line items have a policy exception, N if not."
                 },
                 "approvalStatus": {
                     "type": "object",
@@ -575,11 +615,16 @@
                 "approver": {
                     "type": "object",
                     "description": "Approver for whom the report is pending approval. Only relevant if the approvalStatus.statusName is Pending Approval.",
-                    "$ref": "#/definitions/Approver"
+                    "$ref": "#/definitions/User"
+                },
+                "owner": {
+                    "type": "object",
+                    "description": "Owner of the report.",
+                    "$ref": "#/definitions/User"
                 },
                 "workflowAction": {
                     "type": "object",
-                    "description": "Allowed workflow actions (submit, approve, reject)",
+                    "description": "Hyperlink to allowed workflow actions (submit, approve, reject)",
                     "$ref": "#/definitions/Link"
                 },
                 "expenses": {
@@ -628,7 +673,7 @@
                 "approver": {
                     "type": "object",
                     "description": "Approver for whom the report is pending approval. Only relevant if the approvalStatus.statusName is Pending Approval.",
-                    "$ref": "#/definitions/Approver"
+                    "$ref": "#/definitions/User"
                 }
             }
         },
@@ -706,12 +751,12 @@
                     "type": "array",
                     "description": "Optionally specify an array of approvers to route the report to. This is in the case of dynamic workflow.\n",
                     "items": {
-                        "$ref": "#/definitions/Approver"
+                        "$ref": "#/definitions/User"
                     }
                 }
             }
         },
-        "Approver": {
+        "User": {
             "type": "object",
             "required": [
                 "name",
@@ -720,15 +765,15 @@
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of the approver."
+                    "description": "Name of the user."
                 },
                 "loginid": {
                     "type": "string",
-                    "description": "loginid of the approver."
+                    "description": "loginid of the user."
                 },
                 "href": {
                     "type": "string",
-                    "description": "URL to approver-https://{host}/userprofile/v4/users/{userid}\n"
+                    "description": "URL to approver of the form https://{host}/userprofile/v4/users/{userid}\n"
                 }
             }
         },
@@ -747,7 +792,7 @@
         "Expense": {
             "type": "object",
             "required": [
-                "expenseType",
+                "expenseTypeID",
                 "transactionAmount",
                 "currencyCode",
                 "transactionDate"
@@ -757,21 +802,128 @@
                     "type": "string",
                     "description": "URL to self-https://{host}/users/{userid}/reports/{reportId}/expenses/{expenseId} \n"
                 },
-                "expenseType": {
+                "expenseTypeID": {
                     "type": "string",
-                    "description": "Expense type."
+                    "description": "Generated code of the expense type."
+                },
+                "expenseTypeName": {
+                    "type": "string",
+                    "description": "Name of the expense type in the supplied locale. Defaults to English."
+                },
+                "spendCategory": {
+                    "type": "string",
+                    "description": "Used in analytics this refers to a grouping of expense types."
+                },
+                "transactionDate": {
+                    "type": "string",
+                    "description": "Transaction date in ISO-8601 UTC format."
+                },
+                "lastModifiedDate": {
+                    "type": "string",
+                    "description": "Last modified date date in ISO-8601 UTC format."
                 },
                 "transactionAmount": {
                     "type": "number",
                     "description": "The requested amount of the expense in the transaction currency."
                 },
+                "postedAmount": {
+                    "type": "number",
+                    "description": "The requested amount in the reimbursement currency."
+                },
+                "approvedAmount": {
+                    "type": "number",
+                    "description": "The approved amount of the expense in the reimbursement currency."
+                },
                 "currencyCode": {
                     "type": "string",
                     "description": "ISO 4217 currency code of the transaction currency."
                 },
-                "transactionDate": {
+                "currencyName": {
                     "type": "string",
-                    "description": "Transaction date in ISO-8601 UTC format."
+                    "description": "Name of the transaction currency in the supplied locale."
+                },
+                "exchangeRate": {
+                    "type": "number",
+                    "description": "Exchange rate between the transaction corrency and the report's reimbursement currency."
+                },
+                "paymentTypeCode": {
+                    "type": "string",
+                    "description": "CASH or CARD."
+                },
+                "paymentTypeName": {
+                    "type": "string",
+                    "description": "Name of the payment type in the supplied locale. Defaults to English."
+                },
+                "vendorDescription": {
+                    "type": "string",
+                    "description": "The name or description of the Vendor where the expense was incurred."
+                },
+                "locationName": {
+                    "type": "string",
+                    "description": "Name of the city where the expense happened."
+                },
+                "locationSubdivision": {
+                    "type": "string",
+                    "description": "The state or province where the expense happened."
+                },
+                "locationCountry": {
+                    "type": "string",
+                    "description": "The country where the expense happened."
+                },
+                "receiptImage": {
+                    "type": "object",
+                    "description": "Hyperlink to the receipt image.",
+                    "$ref": "#/definitions/Link"
+                },
+                "eReceipt": {
+                    "type": "object",
+                    "description": "Hyperlink to vendor supplied electronic receipt.",
+                    "$ref": "#/definitions/Link"
+                },
+                "expenseForm": {
+                    "type": "object",
+                    "description": "Hyperlink to the expense form.",
+                    "$ref": "#/definitions/Link"
+                },
+                "isPersonal": {
+                    "type": "string",
+                    "description": "Y if the expense is personal, else N."
+                },
+                "hasVAT": {
+                    "type": "string",
+                    "description": "Y if there are associated VAT transactions,else N."
+                },
+                "hasComments": {
+                    "type": "string",
+                    "description": "Y if there are associated comments,else N."
+                },
+                "hasExceptions": {
+                    "type": "string",
+                    "description": "Y if there are associated policy Exceptions,else N."
+                },
+                "hasAttendees": {
+                    "type": "string",
+                    "description": "Y if there are associated attendees,else N."
+                },
+                "hasAllocations": {
+                    "type": "string",
+                    "description": "Y if there are associated allocation transactions, else N."
+                },
+                "isCreditCardCharge": {
+                    "type": "string",
+                    "description": "Y if it is a credit card transaction,else N."
+                },
+                "isPersonalCardCharge": {
+                    "type": "string",
+                    "description": "Y if it is a personal credit card transaction,else N."
+                },
+                "receiptRequired": {
+                    "type": "string",
+                    "description": "Y if receipt is required,else N."
+                },
+                "imageRequired": {
+                    "type": "string",
+                    "description": "Y if a receipt image is required,else N."
                 },
                 "orgUnits": {
                     "type": "array",
@@ -787,6 +939,46 @@
                     "items": {
                         "$ref": "#/definitions/CustomField",
                         "maxItems": 40
+                    }
+                },
+                "itemizations": {
+                    "type": "array",
+                    "description": "Array of custom fields",
+                    "items": {
+                        "$ref": "#/definitions/Expense"
+                    }
+                },
+                "allocations": {
+                    "type": "array",
+                    "description": "Array of custom fields",
+                    "items": {
+                        "$ref": "#/definitions/Allocation",
+                        "maxItems": 40
+                    }
+                }
+            }
+        },
+        "Allocation": {
+            "type": "object",
+            "properties": {
+                "percentage": {
+                    "type": "number",
+                    "description": "Split percentage."
+                },
+                "accountCode1": {
+                    "type": "string",
+                    "description": "Accounting code."
+                },
+                "accountCode2": {
+                    "type": "string",
+                    "description": "Accounting code."
+                },
+                "customFields": {
+                    "type": "array",
+                    "description": "Array of custom fields",
+                    "items": {
+                        "$ref": "#/definitions/CustomField",
+                        "maxItems": 20
                     }
                 }
             }

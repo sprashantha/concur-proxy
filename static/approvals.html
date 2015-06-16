@@ -17,8 +17,8 @@
     </div>
 
 
-      <h2 ng-show="approvals.Items.length">Pending Approvals ({{approvals.Items.length}})</h2>
-      <table ng-show="approvals.Items.length">
+      <h2 ng-show="approvals.items.length">Pending Approvals ({{approvals.items.length}})</h2>
+      <table ng-show="approvals.items.length">
           <thead>
           <tr>
               <th>Report Name</th>
@@ -28,11 +28,11 @@
           </tr>
           </thead>
           <tbody>
-          <tr ng-repeat="a in approvals.Items">
-              <td><a ng-href="#/approvals/{{a.ID}}">{{ a.Name }}</a></td>
-              <td>{{ a.OwnerName }}</td>
-              <td>{{ a.SubmitDate }}</td>
-              <td>{{ a.Total | currency }}</td>
+          <tr ng-repeat="a in approvals.items">
+              <td><a ng-href="#/approvals/{{a.iD}}">{{ a.name }}</a></td>
+              <td>{{ a.ownerName }}</td>
+              <td>{{ a.submitDate }}</td>
+              <td>{{ a.total | currency }}</td>
           </tr>
           </tbody>
       </table>

@@ -12,7 +12,7 @@ const
 	
 module.exports = function(context, app, router) {
     // Approvals api
-    router.get('/concur/api/trips', function (req, res) {
+    router.get('/travel/v4/trips', function (req, res) {
         var access_token = util.extractToken(req, res);
         let options = {
             method: 'GET',
@@ -30,7 +30,7 @@ module.exports = function(context, app, router) {
                 res.json(502, {error: "bad_gateway", reason: err.code});
                 return;
             }
-            res.json(JSON.parse(body));
+            res.json(JSON.parse(body, util.reviver));
             return;
         });
     });

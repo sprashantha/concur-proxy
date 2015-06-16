@@ -13,7 +13,7 @@ const
 	
 module.exports = function(context, app, router) {
     // Approvals api
-    router.get('/concur/api/approvals', function (req, res) {
+    router.get('/expense/v4/approvals/reports', function (req, res) {
         logger.debug("concur url" + context.config.concur_api_url + context.config.concur_approvals_url);
         var access_token = util.extractToken(req, res);
         let options = {
@@ -29,12 +29,12 @@ module.exports = function(context, app, router) {
                 res.json(502, {error: "bad_gateway", reason: err.code});
                 return;
             }
-            res.json(JSON.parse(body));
+            res.json(JSON.parse(body, util.reviver));
             return;
         });
     });
 
-    router.route('/concur/api/approvals/:reportId')
+    router.route('/expense/v4/approvals/reports/:reportId')
         .get(function (req, res) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;
@@ -55,12 +55,13 @@ module.exports = function(context, app, router) {
                     res.json(502, {error: "bad_gateway", reason: err.code});
                     return;
                 }
-                let jsonBody = JSON.parse(body);
+                let jsonBody = JSON.parse(body, util.reviver);
 
                 res.json(jsonBody);
                 return;
             });
-        })
+        });
+    router.route('/expense/v4/approvals/reports/:reportId/workflow')
         .post(function (req, res) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;

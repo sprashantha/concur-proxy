@@ -124,17 +124,17 @@ app.config(function($routeProvider, $httpProvider){
 
 
 app.controller("homeController", function($scope,tokenService, $http){
-    $http({method: 'GET', url: '/concur/api/home', headers: {'authorization': tokenService.token}})
+    $http({method: 'GET', url: '/home/v4/portal', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.home = response;});
 });
 
 app.controller("tripsController", function($scope, tokenService, $http){
-    $http({method: 'GET', url: '/concur/api/trips', headers: {'authorization': tokenService.token}})
+    $http({method: 'GET', url: '/travel/v4/trips', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.trips = response;});
 });
 
 app.controller("expenseController", function($scope,tokenService,$http){
-    $http({method: 'GET', url: '/concur/api/reports', headers: {'authorization': tokenService.token}})
+    $http({method: 'GET', url: '/expense/v4/reports', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.reports = response;});
 });
 
@@ -159,12 +159,12 @@ app.controller("imageUploadController", function($scope,tokenService, $http, $lo
 
 
 app.controller("approvalsController", function($scope,tokenService,$http){
-    $http({method: 'GET', url: '/concur/api/approvals', headers: {'authorization': tokenService.token}})
+    $http({method: 'GET', url: '/expense/v4/approvals/reports', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.approvals = response;});
 });
 
 app.controller("approvalDetailsController", function($scope,tokenService,$http, $routeParams){
-    $http({method: 'GET', url: '/concur/api/approvals/' + $routeParams.reportId, headers: {'authorization': tokenService.token}})
+    $http({method: 'GET', url: '/expense/v4/approvals/reports/' + $routeParams.reportId, headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.approvalDetail = response;});
 });
 
@@ -172,7 +172,7 @@ app.controller("workflowController", function($scope,tokenService, $http, $locat
     $scope.approveReport = function(){
         $scope.loading = true;
         $http({method: 'POST',
-            url: '/concur/api/approvals/' + $scope.approvalDetail.ReportID,
+            url: '/expense/v4/approvals/reports/' + $scope.approvalDetail.reportID + '/workflow',
             headers: {'authorization': tokenService.token},
             data: {"WorkflowAction": {"Action": "Approve", "Comment": "Approved via Concur Connect"}}})
             .success(function(response){

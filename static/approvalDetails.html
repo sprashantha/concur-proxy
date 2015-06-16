@@ -20,7 +20,7 @@
     </div>
 
 
-      <h1 ng-show="approvalDetail">Expense Report: {{approvalDetail.ReportName}} </h1>
+      <h1 ng-show="approvalDetail">Expense Report: {{approvalDetail.reportName}} </h1>
     <div ng-show="approvalDetail" ng-controller="workflowController">
     <form name="approvalDetailForm"
           ng-submit="approveReport()" novalidate>
@@ -30,14 +30,14 @@
                    ng-model="approvalDetail.ReportID">
         </div>
 
-          Employee Name: {{approvalDetail.EmployeeName}} <br>
-          Report Name: {{approvalDetail.ReportName}} <br>
-          Report ID: {{approvalDetail.ReportID}} <br>
-          Report Date: {{approvalDetail.ReportDate}} <br>
-          Report Total: {{approvalDetail.ReportTotal}} <br>
+          Employee Name: {{approvalDetail.employeeName}} <br>
+          Report Name: {{approvalDetail.reportName}} <br>
+          Report ID: {{approvalDetail.reportID}} <br>
+          Report Date: {{approvalDetail.reportDate}} <br>
+          Report Total: {{approvalDetail.reportTotal}} <br>
 
       <h1 ng-show="approvalDetail">Expense Line Items</h1>
-        <table ng-show="approvalDetail.ExpenseEntriesList.length">
+        <table ng-show="approvalDetail.expenseEntriesList.length">
             <thead>
             <tr>
                 <th>Expense Type</th>
@@ -47,11 +47,11 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="e in approvalDetail.ExpenseEntriesList">
-                <td>{{ e.ExpenseTypeName }}</td>
-                <td>{{ e.PaymentTypeName }}</td>
-                <td>{{ e.TransactionDate }}</td>
-                <td>{{ e.TransactionAmount | currency }}</td>
+            <tr ng-repeat="e in approvalDetail.expenseEntriesList">
+                <td>{{ e.expenseTypeName }}</td>
+                <td>{{ e.paymentTypeName }}</td>
+                <td>{{ e.transactionDate }}</td>
+                <td>{{ e.transactionAmount | currency }}</td>
             </tr>
             </tbody>
         </table><br>

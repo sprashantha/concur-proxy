@@ -11,7 +11,7 @@ const
 	
 module.exports = function(context, app){
             // Home Dashboard
-            app.get('/concur/api/home', function (req, res) {
+            app.get('/home/v4/portal', function (req, res) {
                 let access_token = req.param('access_token');
                 if (!access_token && req.headers) {
                     logger.debug(req.headers);

@@ -10,6 +10,7 @@
     "redis_port": "6379",
     "redis_password": "",
     "logging_level": "debug",
+    "circuit_breaker_on": "true",
     "http": {
         "port": "3000"
     }

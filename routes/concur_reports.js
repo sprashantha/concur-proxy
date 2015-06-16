@@ -12,7 +12,7 @@ const
 	
 module.exports = function(context, app, router) {
     // Approvals api
-    router.get('/concur/api/reports', function (req, res) {
+    router.get('/expense/v4/reports', function (req, res) {
         var access_token = util.extractToken(req, res);
         let options = {
             method: 'GET',
@@ -30,12 +30,12 @@ module.exports = function(context, app, router) {
                 res.json(502, {error: "bad_gateway", reason: err.code});
                 return;
             }
-            res.json(JSON.parse(body));
+            res.json(JSON.parse(body, util.reviver));
             return;
         });
     });
 
-    router.route('/concur/api/reports/:reportId')
+    router.route('/expense/v4/reports/:reportId')
         .get(function (req, res) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;
@@ -53,7 +53,7 @@ module.exports = function(context, app, router) {
                     res.json(502, {error: "bad_gateway", reason: err.code});
                     return;
                 }
-                let jsonBody = JSON.parse(body);
+                let jsonBody = JSON.parse(body, util.reviver);
 
                 res.json(jsonBody);
                 return;
