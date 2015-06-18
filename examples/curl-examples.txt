@@ -1,3 +1,5 @@
+IMAGING:
+
 getLinks:
 curl -X GET  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' http://localhost:3000/imaging/v4/links -v | jq .
 
@@ -31,3 +33,14 @@ curl -X PUT  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM='  http://localhost:
 
 getOcrDetails?:
 curl -X GET  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM='  http://localhost:3000/imaging/v4/images/0e3c6770-f2f0-11e4-996b-2d7d03938edf/ocr -v | jq .
+
+EXPENSE:
+
+getReportsToApprove:
+curl -X GET  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' http://localhost:3000/expense/v4/approvers/reports  -v | jq .
+
+getReportToApprove:
+curl -X GET  -H 'Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=' http://localhost:3000/expense/v4/approvers/reports/578C7BF1F8C14B6A9494  -v | jq .
+
+approveReport:
+curl -X POST -H "Authorization: EKL1hRqbSVw3Nd/njDgxl624qPM=" -H "Content-Type: application/json" -d "{\"workflowAction\": {\"action\": \"Approve\", \"comment\":\"Approved by Connect\"}}" http://localhost:3000/expense/v4/approvers/reports/578C7BF1F8C14B6A9494/workflow  -v | jq .

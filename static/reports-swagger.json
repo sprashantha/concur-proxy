@@ -172,12 +172,12 @@
                 }
             }
         },
-        "/users/{userId}/reports/{reportId}/submission": {
+        "/users/{userId}/reports/{reportId}/workflow": {
             "get": {
                 "tags": [
                     "reports"
                 ],
-                "operationId": "getSubmissionDetails",
+                "operationId": "getReportWorkflow",
                 "description": "Gets the submission details of a report including approval status, payment status, approver, etc.\n",
                 "produces": [
                     "application/json"
@@ -366,7 +366,7 @@
                 }
             }
         },
-        "/approvals/approvers/{userId}/reports": {
+        "/approvers/{userId}/reports": {
             "get": {
                 "tags": [
                     "approvals"
@@ -404,7 +404,7 @@
                 }
             }
         },
-        "/approvals/approvers/{userId}/reports/{reportId}": {
+        "/approvers/{userId}/reports/{reportId}": {
             "get": {
                 "tags": [
                     "approvals"
@@ -441,12 +441,12 @@
                 }
             }
         },
-        "/approvals/approvers/{userId}/reports/{reportId}/workflow": {
+        "/approvers/{userId}/reports/{reportId}/workflow": {
             "get": {
                 "tags": [
                     "approvals"
                 ],
-                "operationId": "getWorkflow",
+                "operationId": "getApprovalWorkflow",
                 "description": "Gets the workflow details of a report for an approver including its approval status, payment status and approver information.\n",
                 "produces": [
                     "application/json"

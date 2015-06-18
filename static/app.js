@@ -134,7 +134,7 @@ app.controller("tripsController", function($scope, tokenService, $http){
 });
 
 app.controller("expenseController", function($scope,tokenService,$http){
-    $http({method: 'GET', url: '/expense/v4/reports', headers: {'authorization': tokenService.token}})
+    $http({method: 'GET', url: '/expense/v4/users/reports', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.reports = response;});
 });
 
@@ -159,12 +159,12 @@ app.controller("imageUploadController", function($scope,tokenService, $http, $lo
 
 
 app.controller("approvalsController", function($scope,tokenService,$http){
-    $http({method: 'GET', url: '/expense/v4/approvals/reports', headers: {'authorization': tokenService.token}})
+    $http({method: 'GET', url: '/expense/v4/approvers/reports', headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.approvals = response;});
 });
 
 app.controller("approvalDetailsController", function($scope,tokenService,$http, $routeParams){
-    $http({method: 'GET', url: '/expense/v4/approvals/reports/' + $routeParams.reportId, headers: {'authorization': tokenService.token}})
+    $http({method: 'GET', url: '/expense/v4/approvers/reports/' + $routeParams.reportId, headers: {'authorization': tokenService.token}})
         .success(function(response){$scope.approvalDetail = response;});
 });
 
@@ -172,9 +172,9 @@ app.controller("workflowController", function($scope,tokenService, $http, $locat
     $scope.approveReport = function(){
         $scope.loading = true;
         $http({method: 'POST',
-            url: '/expense/v4/approvals/reports/' + $scope.approvalDetail.reportID + '/workflow',
+            url: '/expense/v4/approvers/reports/' + $scope.approvalDetail.reportID + '/workflow',
             headers: {'authorization': tokenService.token},
-            data: {"WorkflowAction": {"Action": "Approve", "Comment": "Approved via Concur Connect"}}})
+            data: {"workflowAction": {"action": "Approve", "comment": "Approved via Concur Connect"}}})
             .success(function(response){
                 if (response){
                     alert(" Approval Status: " + response.STATUS);

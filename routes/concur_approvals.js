@@ -10,12 +10,33 @@ const
     util = require('../lib/util.js'),
     cache = require('../lib//models/cache.js');
 
-	
+
+function stripOutBlankOrgUnits(jsonBody, n) {
+    for (let i = 1; i <= n; i++) {
+        let orgUnit = jsonBody['orgUnit' + i];
+        if (orgUnit == "") {
+            delete jsonBody['orgUnit' + i];
+        }
+    }
+}
+
+function stripOutBlankCustomFields(jsonBody, n) {
+    for (let i = 1; i <= n; i++) {
+        let custom = jsonBody['custom' + i];
+        if (custom && (custom['type'] == null || custom['type'] == "") &&
+            (custom['value'] == null || custom['value'] == "") &&
+            (custom['code'] == null || custom['code'] == "")) {
+            delete jsonBody['custom' + i];
+        }
+    }
+}
+
 module.exports = function(context, app, router) {
     // Approvals api
-    router.get('/expense/v4/approvals/reports', function (req, res) {
+    router.get('/expense/v4/approvers/reports', function (req, res) {
         logger.debug("concur url" + context.config.concur_api_url + context.config.concur_approvals_url);
         var access_token = util.extractToken(req, res);
+        let rootUrl = util.getRootUrl(req, context);
         let options = {
             method: 'GET',
             url: context.config.concur_api_url + context.config.concur_approvals_url,
@@ -29,15 +50,29 @@ module.exports = function(context, app, router) {
                 res.json(502, {error: "bad_gateway", reason: err.code});
                 return;
             }
-            res.json(JSON.parse(body, util.reviver));
+
+            let reports = JSON.parse(body, util.reviver);
+            logger.debug("typeof reports: " + typeof reports);
+            logger.debug("reports.items.length: " + reports.items.length);
+            for (let i = 0; i < reports.items.length; i++){
+                reports.items[i]['reportID'] = reports.items[i]['iD'];
+                reports.items[i]['href'] = rootUrl + "/expense/v4/approvers/reports/" + reports.items[i]['reportID'];
+
+                delete reports.items[i]['iD'];
+                delete reports.items[i]['uRI'];
+            }
+
+            res.json(reports);
             return;
         });
     });
 
-    router.route('/expense/v4/approvals/reports/:reportId')
+    router.route('/expense/v4/approvers/reports/:reportId')
         .get(function (req, res) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;
+
+            let rootUrl = util.getRootUrl(req, context);
 
             logger.debug("reportId: " + reportId);
 
@@ -57,11 +92,50 @@ module.exports = function(context, app, router) {
                 }
                 let jsonBody = JSON.parse(body, util.reviver);
 
+                // Cleanup the orgunits and custom fields.
+                 stripOutBlankOrgUnits(jsonBody, 6);
+                stripOutBlankCustomFields(jsonBody, 20);
+                let expenseEntries = jsonBody['expenseEntriesList'];
+
+                for (let i = 0; i < expenseEntries.length; i++) {
+                    stripOutBlankOrgUnits(expenseEntries[i], 6);
+                    stripOutBlankCustomFields(expenseEntries[i], 40);
+
+                    delete expenseEntries[i]['cardTransaction'];
+
+                    let itemizations = expenseEntries[i]['itemizationsList'];
+                    for (let j = 0; j < itemizations.length; j++){
+                        stripOutBlankOrgUnits(itemizations[j], 6);
+                        stripOutBlankCustomFields(itemizations[j], 40);
+
+                        let allocations = itemizations[j]['allocationsList'];
+                        for (let k = 0; k < allocations.length; k++){
+                            stripOutBlankOrgUnits(allocations[k], 6);
+                            stripOutBlankCustomFields(allocations[k], 40);
+                        }
+                    }
+                }
+
+                delete jsonBody['employeeBankAccount'];
+                delete jsonBody['workflowActionURL'];
+
+                jsonBody['workflow'] = {
+                    href: rootUrl + '/expense/v4/approvers/reports/' + reportId + '/workflow',
+                    rel: 'Approval or Rejection',
+                    method: 'POST',
+                    body: {
+                        workflowAction: {
+                            action: 'Approve',
+                            comment: 'Approved via Connect'
+                        }
+                    }
+                }
+
                 res.json(jsonBody);
-                return;
-            });
+            })
+
         });
-    router.route('/expense/v4/approvals/reports/:reportId/workflow')
+    router.route('/expense/v4/approvers/reports/:reportId/workflow')
         .post(function (req, res) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;
@@ -103,8 +177,19 @@ module.exports = function(context, app, router) {
 //                }
                 // Hack to make the xml request work.
                 let bodyXml = json2xml(req.body);
-                bodyXml = bodyXml.replace("<WorkflowAction>",
-                    "<WorkflowAction xmlns=\"http://www.concursolutions.com/api/expense/expensereport/2011/03\">")
+
+                bodyXml = bodyXml.replace("<workflowAction>",
+                    "<WorkflowAction xmlns=\"http://www.concursolutions.com/api/expense/expensereport/2011/03\">");
+                bodyXml = bodyXml.replace("</workflowAction>",
+                    "</WorkflowAction>");
+                bodyXml = bodyXml.replace("<comment>",
+                    "<Comment>");
+                bodyXml = bodyXml.replace("<action>",
+                    "<Action>");
+                bodyXml = bodyXml.replace("</action>",
+                    "</Action>");
+                bodyXml = bodyXml.replace("</comment>",
+                    "</Comment>");
 
                 logger.debug("bodyJson: " + JSON.stringify(req.body));
                 logger.debug("bodyXML: " + bodyXml);
@@ -149,9 +234,10 @@ module.exports = function(context, app, router) {
                 }
                 else if (context.config.use_sqs == 'true') {
                     logger.debug("queueMessage: " + JSON.stringify(queueMessage));
+                    cache.clearCache("home", access_token, context);
                     util.sendApprovalSQSMessage(JSON.stringify(queueMessage), context, function(sendErr, data){
                         if (sendErr){
-                            res.json(502, {error: "bad_gateway", reason: sendErr.code});
+                            res.status(502).json({error: "bad_gateway", reason: sendErr.code});
                         }
                         else{
                             res.status(202).json({"STATUS": "QUEUED FOR APPROVAL"});
@@ -162,18 +248,29 @@ module.exports = function(context, app, router) {
                 }
                 else{
                     request(options1, function (postErr, postResp, approvalResponse) {
+                        logger.debug("options1:" + options1.toString());
+                        if(postResp){
+                            logger.debug("postResp:" + postResp.toString());
+                        }
+
                         if (postErr) {
-                            res.json(502, {error: "bad_gateway", reason: postErr.code});
+                            res.status(502).json({error: "bad_gateway", reason: postErr.code});
                             return;
                         }
                         if (approvalResponse) {
-                            logger.debug("request body: " + approvalResponse.toString());
-                            let jsonBody = xml2json.toJson(approvalResponse);
-
-                            cache.clearCache("home", access_token, context);
-                            logger.debug("response json body " + jsonBody);
-                            res.status(200).json({"STATUS": "SUCCESS"});
-                            return;
+                            let approvalRespString = approvalResponse.toString();
+                            logger.debug("request body: " + approvalRespString);
+                            if (approvalRespString.indexOf("Error") > 0){
+                                res.status(502).json({error: "bad_gateway", reason: "Malformed request"});
+                                return;
+                            }
+                            else{
+                                let jsonBody = xml2json.toJson(approvalResponse);
+                                cache.clearCache("home", access_token, context);
+                                logger.debug("response json body " + jsonBody);
+                                res.status(200).json({"STATUS": "SUCCESS"});
+                                return;
+                            }
                         }
 
                     });

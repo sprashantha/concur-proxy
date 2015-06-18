@@ -1,6 +1,7 @@
 {
     "concur_api_url": "http://www.concursolutions.com/api/",
     "use_mongoose": "false",
+    "use_sqs": "true",
     "mongodb_server": "localhost",
     "mongodb_port": "27017",
     "mongodb_database": "Concur",

@@ -29,7 +29,7 @@
           </thead>
           <tbody>
           <tr ng-repeat="a in approvals.items">
-              <td><a ng-href="#/approvals/{{a.iD}}">{{ a.name }}</a></td>
+              <td><a ng-href="#/approvals/{{a.reportID}}">{{ a.name }}</a></td>
               <td>{{ a.ownerName }}</td>
               <td>{{ a.submitDate }}</td>
               <td>{{ a.total | currency }}</td>

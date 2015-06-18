@@ -9,11 +9,13 @@ const
     logger = require('../lib/logger.js'),
     util = require('../lib/util.js');
 
-	
+
+
 module.exports = function(context, app, router) {
-    // Approvals api
-    router.get('/expense/v4/reports', function (req, res) {
-        var access_token = util.extractToken(req, res);
+    // Reports api
+    router.get('/expense/v4/users/reports', function (req, res) {
+        let access_token = util.extractToken(req, res);
+        let rootUrl = util.getRootUrl(req, context);
         let options = {
             method: 'GET',
             url: context.config.concur_api_url + context.config.concur_reports_url,
@@ -30,12 +32,22 @@ module.exports = function(context, app, router) {
                 res.json(502, {error: "bad_gateway", reason: err.code});
                 return;
             }
-            res.json(JSON.parse(body, util.reviver));
+            let reports = JSON.parse(body, util.reviver);
+            logger.debug("typeof reports: " + typeof reports);
+            logger.debug("reports.items.length: " + reports.items.length);
+            for (let i = 0; i < reports.items.length; i++){
+                reports.items[i]['reportID'] = reports.items[i]['iD'];
+                reports.items[i]['href'] = rootUrl + "/expense/v4/reports/" + reports.items[i]['reportID'];
+
+                delete reports.items[i]['iD'];
+                delete reports.items[i]['uRI'];
+            }
+            res.json(reports);
             return;
         });
     });
 
-    router.route('/expense/v4/reports/:reportId')
+    router.route('/expense/v4/users/reports/:reportId')
         .get(function (req, res) {
             let access_token = util.extractToken(req, res);
             let reportId = req.params.reportId;
