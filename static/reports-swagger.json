@@ -5,7 +5,7 @@
         "title": "Expense reports API.",
         "description": "This set of APIs deals with retrieving, saving, deleting and        submitting expense reports.\n"
     },
-    "host": "api.concur.com",
+    "host": "http://concur-proxy-env-nb7sjtnmm2.elasticbeanstalk.com",
     "basePath": "/expense/v4",
     "paths": {
         "/links": {

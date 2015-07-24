@@ -8,7 +8,8 @@ const
     async = require('async'),
     logger = require('../lib/logger.js'),
     util = require('../lib/util.js'),
-    cache = require('../lib//models/cache.js');
+    cache = require('../lib//models/cache.js'),
+    concur = require('concur-platform');
 
 
 function stripOutBlankOrgUnits(jsonBody, n) {
@@ -102,6 +103,15 @@ module.exports = function(context, app, router) {
                     stripOutBlankCustomFields(expenseEntries[i], 40);
 
                     delete expenseEntries[i]['cardTransaction'];
+
+                    // Generate a URL for the receipt image.
+                    if (expenseEntries[i]['entryImageID'] && expenseEntries[i]['entryImageID'] != ""){
+                        expenseEntries[i]['receiptImage'] = {
+                            href: rootUrl + '/expense/v4/approvers/receiptImage/' + expenseEntries[i]['entryImageID'],
+                            rel: "Receipt Image",
+                            method: 'GET'
+                        }
+                    }
 
                     let itemizations = expenseEntries[i]['itemizationsList'];
                     for (let j = 0; j < itemizations.length; j++){
@@ -278,4 +288,30 @@ module.exports = function(context, app, router) {
                 }
            });
         });
+
+    router.route('/expense/v4/approvers/receiptImage/:imageId')
+        .get(function (req, res) {
+            let access_token = util.extractToken(req, res);
+            let imageId = req.params.imageId;
+
+            var options = {
+                oauthToken:access_token,
+                id:imageId
+            }
+
+            concur.receipt.get(options)
+                .then(function(data) {
+                    //data will contain the receipt image url
+                    logger.debug("Receipt data:" + data.Items.length);
+                })
+                .fail(function(error) {
+                    // error will contain the error message returned
+                    logger.debug("Receipt error:" + error);
+                    return;
+                });
+
+            res.status(200).json({"Status":"SUCCESS"});
+            return;
+
+        })
 }

@@ -5,7 +5,7 @@
         "title": "Imaging API.",
         "description": "This set of APIs deals with retrieving, uploading, and deleting images. Images can be receipt images or invoice images\n"
     },
-    "host": "api.concur.com",
+    "host": "http://concur-proxy-env-nb7sjtnmm2.elasticbeanstalk.com",
     "basePath": "/imaging/v4",
     "paths": {
         "/links": {
