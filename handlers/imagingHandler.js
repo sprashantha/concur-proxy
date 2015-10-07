@@ -26,7 +26,10 @@ exports.getImagingLinks = function(context, req, res){
         let meta = {";concur.correlation_id": req.requestId};
         // Return the list of links.
         logger.debug("/imaging/v4/links", meta);
-        let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+        let rootUrl = req.protocol + "://" + req.header('host');
+
+    logger.debug("host : " + req.header('host'));
+    logger.debug("req.hostname : " + req.hostname);
 
         let links = [];
         links[0] = {href: rootUrl + "/imaging/v4/images", rel: "receipts,invoices", methods: "GET, POST"};
@@ -52,7 +55,7 @@ exports.getImages = function(context, req, res) {
             let length = data.Contents.length;
             length = length < 1000 ? length : 1000;
 
-            let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+            let rootUrl = req.protocol + "://" + req.header('host');
 
             for (var index = 0; index < length; index++) {
                 // ImageInfo
@@ -86,7 +89,7 @@ exports.getImages = function(context, req, res) {
     }
 
 exports.postImage = function(context, req, res) {
-        let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+        let rootUrl = req.protocol + "://" + req.header('host');
 
         let meta = {";concur.correlation_id": req.requestId};
         let body = req.body;
@@ -150,7 +153,7 @@ exports.getImage = function(context, req, res) {
 
         logger.debug("imageId: " + imageId, meta);
 
-        let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+        let rootUrl = req.protocol + "://" + req.header('host');
 
         let acceptJson = (req.get('Accept') == "application/json");
         let ifNoneMatch = req.get('if-none-match');
@@ -282,7 +285,7 @@ exports.getThumbnail = function(context, req, res) {
 
     logger.debug("Getting thumbnail for imageId: " + imageId, meta);
 
-    let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+    let rootUrl = req.protocol + "://" + req.header('host');
 
     res.set('Cache-Control', 'max-age=30, must-revalidate');
     res.vary("Accept, Accept-Encoding");
@@ -367,7 +370,7 @@ exports.putImage = function(context, req, res) {
                     // Pull out the http response statusCode.
                     logger.debug("http response status code:" + this.httpResponse.statusCode);
 
-                    let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
+                    let rootUrl = req.protocol + "://" + req.header('host');
 
 
                     // Response

@@ -67,7 +67,7 @@ async.parallel([
             setTimeout(function () {
                 dbWrapper.setupRedisConnection(context, function(err){
                     if (err){
-                        logger.info("Mongo setup error");
+                        logger.info("Redis setup error");
                     }
                 })
                 callback();
