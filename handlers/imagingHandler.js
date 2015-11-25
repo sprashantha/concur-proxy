@@ -18,7 +18,7 @@ exports.getImagingRoot = function (context, req, res) {
         let rootUrl = req.protocol + "://" + req.hostname + ":" + context.config.port;
 
         let links = [];
-        links[0] = {href: rootUrl + "/imaging/v4/links", rel: "receipts,invoices", methods: "GET, POST"};
+        links[0] = {href: rootUrl + "/imaging/v4/links", rel: "photos,receipts,invoices", methods: "GET, POST"};
         res.status(200).send(links);
     }
 
@@ -32,8 +32,8 @@ exports.getImagingLinks = function(context, req, res){
     logger.debug("req.hostname : " + req.hostname);
 
         let links = [];
-        links[0] = {href: rootUrl + "/imaging/v4/images", rel: "receipts,invoices", methods: "GET, POST"};
-        links[1] = {href: rootUrl + "/imaging/v4/images/{imageId}", rel: "receipts,invoices", methods: "GET, PUT, DELETE"};
+        links[0] = {href: rootUrl + "/imaging/v4/images", rel: "photos,receipts,invoices", methods: "GET, POST"};
+        links[1] = {href: rootUrl + "/imaging/v4/images/{imageId}", rel: "photos,receipts,invoices", methods: "GET, PUT, DELETE"};
         res.status(200).send(links);
     }
 
@@ -206,7 +206,7 @@ exports.getImage = function(context, req, res) {
                     else {
                         let imageInfo = {
                             imageId: params.Key,
-                            imageLink: {href: rootUrl + "/imaging/v4/images/" + params.Key, rel: "receipts,invoices", methods: "GET, PUT, DELETE"},
+                            imageLink: {href: rootUrl + "/imaging/v4/images/" + params.Key, rel: "photos,receipts,invoices", methods: "GET, PUT, DELETE"},
                             lastModified: httpHeaders["last-modified"],
                             size: httpHeaders["content-length"],
                             contentType: httpHeaders["content-type"],
