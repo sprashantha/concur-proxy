@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Proxy to Concur's Web Services",
   "scripts": {
-    "start": "node --harmony ./main.js",
+    "start": "nodemon --harmony ./main.js",
     "test": "mocha test"
   },
   "author": "Prashanth",
@@ -20,7 +20,9 @@
     "mongodb": "~1.4.19",
     "multer": "~0.1.8",
     "nconf": "~0.6.9",
+    "node-riakcs": "0.0.6",
     "node-uuid": "~1.4.3",
+    "proxy-agent": "^2.0.0",
     "redis": "~0.12.1",
     "request": "~2.44.0",
     "request-id": "~0.9.0",

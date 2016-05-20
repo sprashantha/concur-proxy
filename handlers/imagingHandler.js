@@ -103,7 +103,7 @@ exports.postImage = function(context, req, res) {
             let path = files.fileToUpload.path;
 
             if (path) {
-                logger.debug("path: " + path, meta);
+                logger.info("path: " + path, meta);
                 fs.exists(path, function (exists) {
                     logger.debug("File exists: " + exists, meta);
                 });

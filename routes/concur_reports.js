@@ -33,16 +33,22 @@ module.exports = function(context, app, router) {
                 return;
             }
             let reports = JSON.parse(body, util.reviver);
-            logger.debug("typeof reports: " + typeof reports);
-            logger.debug("reports.items.length: " + reports.items.length);
-            for (let i = 0; i < reports.items.length; i++){
-                reports.items[i]['reportID'] = reports.items[i]['iD'];
-                reports.items[i]['href'] = rootUrl + "/expense/v4/reports/" + reports.items[i]['reportID'];
+            if (reports && reports.items){
+                logger.debug("typeof reports: " + typeof reports);
+                logger.debug("reports.items.length: " + reports.items.length);
+                for (let i = 0; i < reports.items.length; i++){
+                    reports.items[i]['reportID'] = reports.items[i]['iD'];
+                    reports.items[i]['href'] = rootUrl + "/expense/v4/reports/" + reports.items[i]['reportID'];
 
-                delete reports.items[i]['iD'];
-                delete reports.items[i]['uRI'];
+                    delete reports.items[i]['iD'];
+                    delete reports.items[i]['uRI'];
+                }
+                res.json(reports);
             }
-            res.json(reports);
+            else{
+                res.json({});
+            }
+
             return;
         });
     });

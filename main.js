@@ -6,11 +6,11 @@ const
     bodyParser = require('body-parser'),
     logger = require('./lib/logger.js'),
     requestId = require('request-id/express'),
-    AWS = require('aws-sdk'),
     dbWrapper = require('./lib/models/dbwrapper.js'),
     awsWrapper = require('./lib/models/awswrapper.js'),
     auth = require('./lib/auth.js'),
-    configSetup = require('./lib/config.js');
+    configSetup = require('./lib/config.js'),
+    proxy = require('proxy-agent');
 
 
  const
@@ -50,17 +50,6 @@ let config = configSetup.setupConfig();
 let context = {'config': config};
 
 
-//  --  AWS Settings  ---
-const
-//      awsCredentialsPath = '../aws.credentials.json',
-      sqsQueueUrl = 'https://sqs.us-west-2.amazonaws.com/749188282015/report-approvals';
-
-//      AWS.config.loadFromPath(awsCredentialsPath);
-     // You need to set the region to access SQS. Not needed for S3. Also no need to load the credentials manually.
-     // The SDK automatically loads it from the credentials file in the ~/.aws/credentials file (look under prashantha).
-     // If running in EC2, then it uses the IAM role associated with the EC2 instance.
-     AWS.config.update({region: 'us-west-2'});
-
 // -- Setup and Test Remote Services including Redis, MongoDB, S3 and SQS. ----
 async.parallel([
         function (callback) {
@@ -85,19 +74,14 @@ async.parallel([
         },
         function (callback){
             setTimeout(function(){
-                let s3 = new AWS.S3();
-                context.s3 = s3;
-
-                // Test Imaging Bucket
-                awsWrapper.testS3ImagingConnection(s3, callback);
+                awsWrapper.setUpS3Connection(context);
+                awsWrapper.testS3ImagingConnection(context.s3, callback);
             }, 500);
         },
         function (callback){
             setTimeout(function(){
-                let sqs = new AWS.SQS();
-                context.sqs = sqs;
-                context.sqsQueueUrl = sqsQueueUrl;
-                awsWrapper.testSQSConnection(sqs, sqsQueueUrl, callback);
+                awsWrapper.setUpSQSConnection(context);
+                awsWrapper.testSQSConnection(context.sqs, callback);
             }, 500);
         }],
         function (err, results) {
@@ -129,6 +113,3 @@ async.parallel([
     require('./routes/concur_reports.js')(context, app, router);
     require('./routes/concur_approvals.js')(context, app, router);
     require('./routes/concur_imaging.js')(context, router);
-
-
-	

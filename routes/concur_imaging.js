@@ -27,7 +27,14 @@ module.exports = function(context, router) {
 
     router.route('/imaging/v4/images/:imageId')
         .get(function (req, res) {
-            imagingHandler.getImage(context, req, res);
+             imagingHandler.getImage(context, req, res);
+
+            // ———Latency Injection—————
+           // setTimeout((function() { imagingHandler.getImage(context, req, res);}), 5000);
+
+            // ————Failure Injection ————
+           // res.status(500).json({error: "Internal server error", reason: "DB is hosed."});
+            
         })
         .put(function (req, res) {
             imagingHandler.putImage(context, req, res);

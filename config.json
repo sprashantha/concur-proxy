@@ -10,7 +10,12 @@
     "redis_server": "localhost",
     "redis_port": "6379",
     "redis_password": "",
-    "logging_level": "debug",
+    "use_riakcs": "false",
+    "riakcs_server": "10.25.45.246",
+    "riakcs_port": "8080",
+    "riakcs_accesskeyid": "",
+    "riakcs_secretaccesskey": "",
+    "logging_level": "info",
     "circuit_breaker_on": "true",
     "http": {
         "port": "3000"
